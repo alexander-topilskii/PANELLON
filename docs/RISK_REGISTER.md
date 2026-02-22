@@ -58,3 +58,10 @@
   - deterministic contract tests;
   - versioned keying;
   - ADR required for determinism-affecting changes.
+
+## See Also
+
+- [TEST_PLAN.md](TEST_PLAN.md) — риск-ориентированные проверки
+- [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md) — контроль деградаций
+- [ROADMAP.md](ROADMAP.md) — приоритизация mitigation по milestone
+- [ADR/README.md](ADR/README.md) — решения, влияющие на риски

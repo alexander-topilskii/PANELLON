@@ -55,3 +55,11 @@ Release candidate passes only if:
 - all critical and high severity test failures are resolved;
 - determinism checks pass on CI baseline;
 - performance budget not violated on baseline hardware.
+
+## See Also
+
+- [TECH_SPEC.md](TECH_SPEC.md) — контракты, которые тестируем
+- [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md) — целевые метрики
+- [ROADMAP.md](ROADMAP.md) — milestone DoD
+- [RISK_REGISTER.md](RISK_REGISTER.md) — risk-driven test focus
+- [ADR/0002-determinism-contract.md](ADR/0002-determinism-contract.md)

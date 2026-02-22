@@ -55,3 +55,10 @@ Failure behavior:
 - One clear reason per error dialog.
 - Always provide recovery action ("retry", "clear cache", "continue").
 - Avoid technical jargon in user-facing copy.
+
+## See Also
+
+- [ROADMAP.md](ROADMAP.md) — когда и в каком milestone вводятся флоу
+- [DATA_MODEL.md](DATA_MODEL.md) — данные, которые поддерживают UX-флоу
+- [TECH_SPEC.md](TECH_SPEC.md) — поведенческие контракты переходов и ошибок
+- [TEST_PLAN.md](TEST_PLAN.md) — UX acceptance tests

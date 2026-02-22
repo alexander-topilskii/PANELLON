@@ -43,3 +43,10 @@ Archive store is not evicted automatically.
 
 - Any PR that changes generation/render path must include before/after perf note.
 - If p95 frame time worsens by >10% on baseline scene, change requires explicit sign-off.
+
+## See Also
+
+- [TEST_PLAN.md](TEST_PLAN.md) — perf/soak проверки
+- [ROADMAP.md](ROADMAP.md) — milestone M5
+- [RISK_REGISTER.md](RISK_REGISTER.md) — риски деградации и утечек
+- [ADR/0006-performance-policy.md](ADR/0006-performance-policy.md)

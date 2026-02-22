@@ -98,3 +98,11 @@ src/
 - Multiplayer/sync between clients.
 - Audio pipeline.
 - Server-side gallery.
+
+## See Also
+
+- [TECH_SPEC.md](TECH_SPEC.md) — точные технические контракты
+- [ROADMAP.md](ROADMAP.md) — порядок внедрения архитектурных блоков
+- [DATA_MODEL.md](DATA_MODEL.md) — storage-модель и миграции
+- [ADR/0001-tech-stack-and-rendering.md](ADR/0001-tech-stack-and-rendering.md)
+- [ADR/0003-floor-generation-chunking.md](ADR/0003-floor-generation-chunking.md)

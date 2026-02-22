@@ -90,3 +90,11 @@ DoD:
 
 - user can save/open archived finds;
 - error states are user-readable and recoverable.
+
+## See Also
+
+- [../plan.md](../plan.md) — детальный breakdown этапов
+- [ARCHITECTURE.md](ARCHITECTURE.md) — модульные зависимости
+- [TECH_SPEC.md](TECH_SPEC.md) — контракты, которые реализуются по milestone
+- [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md) — критерии M5
+- [TEST_PLAN.md](TEST_PLAN.md) — release gates

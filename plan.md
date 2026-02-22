@@ -2,6 +2,15 @@
 
 Поэтапный план. Каждый этап — рабочий MVP.
 
+Связанные документы:
+
+- Vision и контекст: [README.md](README.md)
+- Индекс инженерной документации: [docs/README.md](docs/README.md)
+- Архитектура: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Технические контракты: [docs/TECH_SPEC.md](docs/TECH_SPEC.md)
+- Milestone roadmap: [docs/ROADMAP.md](docs/ROADMAP.md)
+- Закрытые вопросы: [questions.md](questions.md)
+
 ---
 
 ## Принятые решения

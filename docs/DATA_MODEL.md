@@ -68,3 +68,10 @@ Records:
 - On migration failure:
   - cache may be dropped;
   - archive attempted to preserve.
+
+## See Also
+
+- [TECH_SPEC.md](TECH_SPEC.md) — storage/versioning contract
+- [UX_FLOWS.md](UX_FLOWS.md) — resume/archive пользовательские сценарии
+- [TEST_PLAN.md](TEST_PLAN.md) — migration/quota проверки
+- [ADR/0005-storage-and-versioning.md](ADR/0005-storage-and-versioning.md)

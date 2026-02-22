@@ -61,3 +61,10 @@ Each candidate shader emits:
 
 - Any grammar node semantic change requires `GEN_VERSION` bump.
 - New node families require ADR entry and tier assignment update.
+
+## See Also
+
+- [TECH_SPEC.md](TECH_SPEC.md) — room pipeline, retry, validation
+- [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md) — perf caps for shader tiers
+- [TEST_PLAN.md](TEST_PLAN.md) — grammar determinism checks
+- [ADR/0004-room-generation-and-validation.md](ADR/0004-room-generation-and-validation.md)

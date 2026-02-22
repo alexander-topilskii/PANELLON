@@ -100,3 +100,13 @@ Cache key format:
 - WebGL2 unavailable -> blocking fallback screen.
 - Shader compile failures -> fallback room shader + telemetry event.
 - Quota exceeded -> evict cache by LRU; never auto-delete archive.
+
+## See Also
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — границы модулей и runtime-model
+- [SHADER_GRAMMAR.md](SHADER_GRAMMAR.md) — grammar и ограничения
+- [DATA_MODEL.md](DATA_MODEL.md) — storage schema и migration
+- [TEST_PLAN.md](TEST_PLAN.md) — проверка контрактов и регрессий
+- [ADR/0002-determinism-contract.md](ADR/0002-determinism-contract.md)
+- [ADR/0004-room-generation-and-validation.md](ADR/0004-room-generation-and-validation.md)
+- [ADR/0005-storage-and-versioning.md](ADR/0005-storage-and-versioning.md)
