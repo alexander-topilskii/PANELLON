@@ -26,3 +26,10 @@
 
 - часть ячеек может быть недоступной как контент;
 - нужен аккуратный баланс между strict validation и творческой вариативностью.
+
+## Related
+
+- [../TECH_SPEC.md](../TECH_SPEC.md)
+- [../SHADER_GRAMMAR.md](../SHADER_GRAMMAR.md)
+- [../TEST_PLAN.md](../TEST_PLAN.md)
+- [0002-determinism-contract.md](0002-determinism-contract.md)

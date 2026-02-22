@@ -23,3 +23,10 @@
 Минусы:
 
 - замедляет скорость feature delivery из-за обязательных измерений.
+
+## Related
+
+- [../PERFORMANCE_BUDGET.md](../PERFORMANCE_BUDGET.md)
+- [../TEST_PLAN.md](../TEST_PLAN.md)
+- [../RISK_REGISTER.md](../RISK_REGISTER.md)
+- [../ROADMAP.md](../ROADMAP.md)

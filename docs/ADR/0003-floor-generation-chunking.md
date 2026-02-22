@@ -23,3 +23,10 @@
 Минусы:
 
 - усложнение генератора и boundary-согласования между чанками.
+
+## Related
+
+- [../ARCHITECTURE.md](../ARCHITECTURE.md)
+- [../TECH_SPEC.md](../TECH_SPEC.md)
+- [../PERFORMANCE_BUDGET.md](../PERFORMANCE_BUDGET.md)
+- [0002-determinism-contract.md](0002-determinism-contract.md)

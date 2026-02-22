@@ -25,3 +25,10 @@
 
 - сложность миграций;
 - квоты хранилища зависят от браузера.
+
+## Related
+
+- [../DATA_MODEL.md](../DATA_MODEL.md)
+- [../TECH_SPEC.md](../TECH_SPEC.md)
+- [../TEST_PLAN.md](../TEST_PLAN.md)
+- [0002-determinism-contract.md](0002-determinism-contract.md)

@@ -28,3 +28,10 @@
 
 - дополнительная дисциплина versioning;
 - ограничение на "случайные" runtime-ветки логики.
+
+## Related
+
+- [../TECH_SPEC.md](../TECH_SPEC.md)
+- [../TEST_PLAN.md](../TEST_PLAN.md)
+- [0003-floor-generation-chunking.md](0003-floor-generation-chunking.md)
+- [0005-storage-and-versioning.md](0005-storage-and-versioning.md)

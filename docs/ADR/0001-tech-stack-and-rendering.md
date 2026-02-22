@@ -25,3 +25,9 @@
 
 - сложнее поддерживать два рендер-режима;
 - возможны ограничения WebGL на слабых устройствах.
+
+## Related
+
+- [../ARCHITECTURE.md](../ARCHITECTURE.md)
+- [../TECH_SPEC.md](../TECH_SPEC.md)
+- [0006-performance-policy.md](0006-performance-policy.md)
