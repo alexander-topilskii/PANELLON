@@ -15,5 +15,7 @@
 
 ## Ссылки
 
+- Vision и контекст: [README.md](README.md)
 - Детальный план: [plan.md](plan.md)
 - Полный пакет документации: [docs/README.md](docs/README.md)
+- Архитектурные решения: [docs/ADR/README.md](docs/ADR/README.md)

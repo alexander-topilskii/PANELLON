@@ -14,6 +14,7 @@
 - Retry cap: `20`.
 - После исчерпания ретраев ячейка помечается `empty`.
 - Используется fallback shader для compile failure.
+- **Пороги валидации:** avg luminance < 0.02, variance < 0.001 (буфер 16×16). Оба условия — для «чёрного экрана».
 
 ## Consequences
 

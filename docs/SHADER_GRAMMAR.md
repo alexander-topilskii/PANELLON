@@ -31,6 +31,7 @@ Generate varied but valid raymarch scenes from deterministic inputs.
 5. Animation
    - `rotate_y`
    - `pulse`
+   - `slide` (линейное смещение по оси, параметр от PRNG)
    - `morph`
 
 ## Tier Constraints
@@ -48,6 +49,18 @@ Generate varied but valid raymarch scenes from deterministic inputs.
   - unbounded loops;
   - recursive macro expansion;
   - denominators without epsilon guards.
+
+## Parameter Guardrails
+
+Чтобы снизить долю вырожденных SDF и чёрных комнат:
+
+- **sphere:** радиус `clamp(r, 0.1, 2.0)` м.
+- **box:** размеры по осям `clamp(s, 0.1, 2.0)` м.
+- **cylinder:** радиус `clamp(r, 0.1, 1.5)`, высота `clamp(h, 0.2, 2.5)` м.
+- **torus:** большой радиус R `clamp(0.2, 1.0)`, малый r `clamp(0.05, 0.5)` м.
+- **plane:** нормаль нормализована; смещение ограничено ±1 м.
+- **repeat:** период `clamp(p, 0.5, 4.0)` м, итерации ≤ 4.
+- **twist/bend:** угол `clamp(-π, π)`.
 
 ## Validation Hooks
 
