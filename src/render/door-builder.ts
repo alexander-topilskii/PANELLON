@@ -63,8 +63,9 @@ export function buildRoomWalls(
       const cx = x * CELL_SIZE - halfGrid + CELL_SIZE / 2;
       const cz = z * CELL_SIZE - halfGrid + CELL_SIZE / 2;
 
-      const isReserved = reservedSet.has(`${x},${z}`);
-      const doorWall = isReserved ? 0 : pickDoorWall(grid, x, z, globalSeed, floorNum);
+      if (reservedSet.has(`${x},${z}`)) continue;
+
+      const doorWall = pickDoorWall(grid, x, z, globalSeed, floorNum);
 
       const sides = [WALL_N, WALL_S, WALL_E, WALL_W];
       for (const side of sides) {
