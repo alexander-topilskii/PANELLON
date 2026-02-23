@@ -48,6 +48,7 @@ export function buildRoomWalls(
   globalSeed: number,
   floorNum: number,
   wallMat: THREE.Material,
+  reservedCells: Array<{ x: number; z: number }> = [],
 ): RoomWallsResult {
   const group = new THREE.Group();
   const wallBoxes: THREE.Box3[] = [];
@@ -55,12 +56,15 @@ export function buildRoomWalls(
   const halfGrid = (grid.side * CELL_SIZE) / 2;
   const hr = ROOM_SIZE / 2;
 
+  const reservedSet = new Set(reservedCells.map((c) => `${c.x},${c.z}`));
+
   for (let z = 0; z < grid.side; z++) {
     for (let x = 0; x < grid.side; x++) {
       const cx = x * CELL_SIZE - halfGrid + CELL_SIZE / 2;
       const cz = z * CELL_SIZE - halfGrid + CELL_SIZE / 2;
 
-      const doorWall = pickDoorWall(grid, x, z, globalSeed, floorNum);
+      const isReserved = reservedSet.has(`${x},${z}`);
+      const doorWall = isReserved ? 0 : pickDoorWall(grid, x, z, globalSeed, floorNum);
 
       const sides = [WALL_N, WALL_S, WALL_E, WALL_W];
       for (const side of sides) {
@@ -198,7 +202,7 @@ function doorTrigger(
   side: number,
 ): THREE.Box3 {
   const halfDoor = DOOR_WIDTH / 2;
-  const depth = 0.6;
+  const depth = 0.25;
   const h = CEILING_HEIGHT;
 
   switch (side) {

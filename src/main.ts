@@ -9,6 +9,7 @@ import { HUD } from './ui/hud';
 import { resolveSeed, persistSeed, seedToGlobal } from './shared/seed';
 import { RoomRenderer } from './render/room-renderer';
 import { Minimap } from './ui/minimap';
+import { ShaderDebug } from './ui/shader-debug';
 
 function checkWebGL2(): boolean {
   const testCanvas = document.createElement('canvas');
@@ -60,6 +61,8 @@ function bootstrap(): void {
   const minimap = new Minimap(uiRoot);
   minimap.hide();
 
+  const shaderDebug = new ShaderDebug(uiRoot);
+
   let player: PlayerController | null = null;
   let floorMgr: FloorManager | null = null;
 
@@ -99,6 +102,7 @@ function bootstrap(): void {
         engine,
         roomRenderer,
         sm,
+        shaderDebug,
       );
     }
 

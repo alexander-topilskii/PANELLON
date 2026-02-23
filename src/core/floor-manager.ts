@@ -16,6 +16,7 @@ import type { MinimapFloorData } from '@/ui/minimap';
 import { FALLBACK_GRADIENT_SDF } from '@/shader-gen';
 import { FloorRoomCache } from '@/shader-gen/room-cache';
 import { ShaderValidator } from '@/shader-gen/validator';
+import type { ShaderDebug } from '@/ui/shader-debug';
 
 const EYE_HEIGHT = 1.7;
 const WALK_SPEED = 3.5;
@@ -44,7 +45,7 @@ export class FloorManager {
   private floorNum = 0;
   private transitioning = false;
   private playerBox = new THREE.Box3();
-  private playerSize = new THREE.Vector3(0.4, 1.7, 0.4);
+  private playerSize = new THREE.Vector3(0.3, 1.7, 0.3);
   private globalSeed = 0;
 
   private inRoom = false;
@@ -65,6 +66,7 @@ export class FloorManager {
     private readonly engine: Engine,
     private readonly roomRenderer: RoomRenderer,
     private readonly sm: StateMachine,
+    private readonly shaderDebug?: ShaderDebug,
   ) {
     this.validator = new ShaderValidator(engine.renderer);
   }
@@ -316,9 +318,13 @@ export class FloorManager {
     this.player.position.z = worldZ - door.roomCenterZ;
     this.player.camera.position.copy(this.player.position);
 
-    const ok = this.roomRenderer.setShader(entry.sdfCode!);
+    const sdf = entry.sdfCode!;
+    const ok = this.roomRenderer.setShader(sdf);
     if (!ok) {
       this.roomRenderer.setShader(FALLBACK_GRADIENT_SDF);
+      this.shaderDebug?.setCode(FALLBACK_GRADIENT_SDF);
+    } else {
+      this.shaderDebug?.setCode(sdf);
     }
 
     this.engine.setRenderOverride(() => {
@@ -342,6 +348,7 @@ export class FloorManager {
     this.player.camera.position.copy(this.player.position);
 
     this.engine.setRenderOverride(null);
+    this.shaderDebug?.clear();
 
     if (this.sm.state === 'room') {
       this.sm.transition('corridor');

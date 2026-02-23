@@ -156,7 +156,7 @@ export function buildProceduralFloor(
     color: ROOM_WALL_COLOR,
     roughness: 0.85,
   });
-  const roomWalls = buildRoomWalls(maze, globalSeed, floorNum, roomWallMat);
+  const roomWalls = buildRoomWalls(maze, globalSeed, floorNum, roomWallMat, desc.reservedCells);
   group.add(roomWalls.group);
 
   const allWallBoxes = [...corridorRuntime.wallBoxes, ...roomWalls.wallBoxes];
