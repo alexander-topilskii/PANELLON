@@ -235,13 +235,17 @@ export class FloorManager {
       this.player.position.x += mx;
       this.player.position.z += mz;
 
+      // Exit check runs on raw position BEFORE collision clamp,
+      // otherwise the clamp prevents the player from ever reaching
+      // the exit threshold.
+      if (this.checkRoomExit()) {
+        this.exitRoom();
+        return;
+      }
+
       this.applyRoomCollision();
       this.player.position.y = EYE_HEIGHT;
       this.player.camera.position.copy(this.player.position);
-    }
-
-    if (this.checkRoomExit()) {
-      this.exitRoom();
     }
   }
 
@@ -365,6 +369,17 @@ export class FloorManager {
       this.roomCache.clear();
       this.roomCache = null;
     }
+  }
+
+  /** Returns player position in world space, even when inside a room. */
+  getWorldPosition(): { x: number; z: number } {
+    if (this.inRoom && this.activeDoor) {
+      return {
+        x: this.player.position.x + this.activeDoor.roomCenterX,
+        z: this.player.position.z + this.activeDoor.roomCenterZ,
+      };
+    }
+    return { x: this.player.position.x, z: this.player.position.z };
   }
 
   getMinimapData(): MinimapFloorData | null {

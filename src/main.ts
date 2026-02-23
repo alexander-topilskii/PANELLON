@@ -122,7 +122,8 @@ function bootstrap(): void {
       const forward = new THREE.Vector3();
       engine.camera.getWorldDirection(forward);
       const yaw = Math.atan2(forward.x, -forward.z);
-      minimap.update(player.position.x, player.position.z, yaw);
+      const wp = floorMgr.getWorldPosition();
+      minimap.update(wp.x, wp.z, yaw);
     });
 
     sm.transition('corridor');
