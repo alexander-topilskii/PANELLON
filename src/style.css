@@ -1,0 +1,119 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: 'Courier New', Courier, monospace;
+  color: #ccc;
+}
+
+#game-canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+#ui-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+#ui-root > * {
+  pointer-events: auto;
+}
+
+/* Start Screen */
+#start-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.start-inner {
+  text-align: center;
+  max-width: 400px;
+  padding: 2rem;
+}
+
+.start-title {
+  font-size: 3rem;
+  font-weight: 300;
+  letter-spacing: 0.5em;
+  margin-bottom: 0.25rem;
+  color: #ddd;
+}
+
+.start-subtitle {
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 2.5rem;
+  letter-spacing: 0.15em;
+}
+
+.start-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#seed-input {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: #1a1a1a;
+  color: #ccc;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#seed-input:focus {
+  border-color: #7799cc;
+}
+
+#seed-enter {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #ccc;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  letter-spacing: 0.1em;
+}
+
+#seed-enter:hover {
+  background: #3a3a3a;
+  border-color: #7799cc;
+}
+
+/* HUD */
+#hud {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  font-size: 0.85rem;
+  color: rgba(200, 200, 200, 0.7);
+  pointer-events: none;
+  user-select: none;
+}

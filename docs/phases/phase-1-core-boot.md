@@ -18,24 +18,38 @@ RTD [+]
 
 Тестовая комната 6×6×2.5 м — это будущий вестибюль этажа 0. В фазе 2 к нему добавится лестница.
 
-- [ ] Инициализировать камеру (`PerspectiveCamera`, высота глаз ~1.7 м)
-- [ ] Реализовать PointerLockControls (мышь → обзор, Escape → unlock)
-- [ ] Добавить WASD-движение (нормализованный вектор `(dx, dz)` × `deltaTime`)
-- [ ] Создать тестовую комнату 6×6×2.5 м (пол, стены, потолок — MeshStandardMaterial)
-- [ ] Реализовать коллизию: Y зафиксирован, bounds check по X и Z (split-axis)
+- [x] Инициализировать камеру (`PerspectiveCamera`, высота глаз ~1.7 м)
+- [x] Реализовать PointerLockControls (мышь → обзор, Escape → unlock)
+- [x] Добавить WASD-движение (нормализованный вектор `(dx, dz)` × `deltaTime`)
+- [x] Создать тестовую комнату 6×6×2.5 м (пол, стены, потолок — MeshStandardMaterial)
+- [x] Реализовать коллизию: Y зафиксирован, bounds check по X и Z (split-axis)
 
 ## 1.2 Seed-система и стартовый экран
 
-- [ ] Реализовать `mulberry32` hash (строка → число) и seedable PRNG
-- [ ] Создать стартовый экран (HTML over canvas): поле seed + кнопка «Войти»
-- [ ] Реализовать приоритет seed: URL `?seed=...` > input > localStorage > дефолт `"official"`
-- [ ] Настроить state machine: `MENU` → `PLAYING`
+- [x] Реализовать `mulberry32` hash (строка → число) и seedable PRNG
+- [x] Создать стартовый экран (HTML over canvas): поле seed + кнопка «Войти»
+- [x] Реализовать приоритет seed: URL `?seed=...` > input > localStorage > дефолт `"official"`
+- [x] Настроить state machine: `MENU` → `PLAYING`
 
 ---
 
 **MVP (Definition of Done):**
 
-- [ ] Запускаю → вижу стартовый экран
-- [ ] Ввожу seed, жму старт → мышь лочится, хожу WASD по комнате 6×6 м
-- [ ] Escape → анлок мыши
-- [ ] Один seed → одно поведение PRNG (тест детерминизма)
+- [x] Запускаю → вижу стартовый экран
+- [x] Ввожу seed, жму старт → мышь лочится, хожу WASD по комнате 6×6 м
+- [x] Escape → анлок мыши
+- [x] Один seed → одно поведение PRNG (тест детерминизма — 16 тестов в Vitest)
+
+---
+
+## Принятые решения (Phase 1)
+
+| Вопрос | Решение | Обоснование |
+|--------|---------|-------------|
+| PointerLock | Собственная обёртка вместо `PointerLockControls` из Three.js | Меньше зависимостей, лучший контроль. Euler order YXZ для FPS-камеры; pitch clamp ±π/2 |
+| Движение | `PlayerController` объединяет keyboard + pointer lock | Одна точка обновления в game loop; camera-relative forward/right |
+| Скорость | 3.5 м/с | Комфортная пешеходная скорость для масштаба комнаты 6×6 м |
+| Коллизия | Bounds clamping с margin 0.25 м | Split-axis: сначала X, затем Z. Margin предотвращает z-fighting у стен |
+| Hash функция | FNV-1a для string→seed | Быстрая, хорошее распределение, без зависимостей. mulberry32 для PRNG из числового seed |
+| Стартовый экран | HTML overlay в #ui-root | pointer-events: none на контейнере, auto на дочерних — не блокирует canvas для click-to-lock |
+| State machine | Явные допустимые переходы, throw при нарушении | Ранняя диагностика ошибок; все состояния из ARCHITECTURE.md (boot/menu/corridor/room/transition/error) |

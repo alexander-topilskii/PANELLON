@@ -14,28 +14,43 @@ RTD [+]
 
 ## 0.1 Инициализация и зависимости
 
-- [ ] Развернуть проект: `npm create vite@latest panellon -- --template vanilla-ts`
-- [ ] Установить зависимости: `three`, `@types/three`
-- [ ] Настроить TypeScript, ESLint, Prettier
-- [ ] Настроить тестовый фреймворк (Vitest)
-- [ ] Создать базовую файловую структуру согласно ARCHITECTURE.md (`src/core`, `input`, `world-gen`, `shader-gen`, `render`, `storage`, `ui`, `shared`)
+- [x] Развернуть проект: Vite + vanilla-ts (ручная инициализация, т.к. репозиторий уже содержал docs)
+- [x] Установить зависимости: `three`, `@types/three`
+- [x] Настроить TypeScript, ESLint, Prettier
+- [x] Настроить тестовый фреймворк (Vitest)
+- [x] Создать базовую файловую структуру согласно ARCHITECTURE.md (`src/core`, `input`, `world-gen`, `shader-gen`, `render`, `storage`, `ui`, `shared`)
 
 ## 0.2 Настройка CI/CD (GitHub Actions)
 
-- [ ] Создать `.github/workflows/deploy.yml` (checkout → setup-node → install → build → upload-pages-artifact)
-- [ ] Настроить проверки линтера и сборки при пушах в main
+- [x] Создать `.github/workflows/deploy.yml` (checkout → setup-node → install → lint → test → build → upload-pages-artifact)
+- [x] Настроить проверки линтера и сборки при пушах в main
 
 ## 0.3 Базовый цикл приложения (App Shell)
 
-- [ ] Настроить `index.html` и корневой `style.css` (fullscreen canvas: `100vw × 100vh`, без скроллов)
-- [ ] Написать базовый Game Loop (`requestAnimationFrame`) с вызовом `render()`
-- [ ] Вывести простейшую сцену (куб) для проверки конвейера
+- [x] Настроить `index.html` и корневой `style.css` (fullscreen canvas: `100vw × 100vh`, без скроллов)
+- [x] Написать базовый Game Loop (`requestAnimationFrame`) с вызовом `render()`
+- [x] Вывести простейшую сцену (куб) для проверки конвейера
 
 ---
 
 **MVP (Definition of Done):**
 
-- [ ] Проект собирается без ошибок
-- [ ] Авто-деплой на GitHub Pages работает (Action проходит)
-- [ ] Локально и на GH Pages виден Three.js canvas с базовым рендером
-- [ ] Vitest запускается (`npm test`)
+- [x] Проект собирается без ошибок
+- [ ] Авто-деплой на GitHub Pages работает (Action проходит) — ожидает первого пуша в main
+- [x] Локально виден Three.js canvas с базовым рендером (вращающийся куб)
+- [x] Vitest запускается (`npm test`), 3/3 теста проходят
+
+---
+
+## Принятые решения (Phase 0)
+
+| Вопрос | Решение | Обоснование |
+|--------|---------|-------------|
+| Инициализация проекта | Ручная настройка Vite (не шаблон `create vite`) | Репозиторий уже содержал документацию и git-историю; шаблон затёр бы файлы |
+| ESLint конфигурация | Flat config (`eslint.config.js`) | ESLint v10 не поддерживает `.eslintrc.*`; миграция на новый формат обязательна |
+| Структура `src/` | 8 модулей с placeholder `index.ts` | По ARCHITECTURE.md; модули заполняются в следующих фазах |
+| Game Loop | Класс `Engine` + `Clock` | `Engine` владеет renderer/scene/camera и RAF loop; `Clock` — тонкая обёртка с delta-clamping (1/15 сек) для защиты от spiral-of-death после tab-away |
+| Базовая сцена | Вращающийся куб со StandardMaterial + направленный свет | Минимальная проверка что Three.js pipeline работает |
+| WebGL2 проверка | При загрузке, до создания renderer | Согласно TECH_SPEC §6: при отсутствии WebGL2 — экран с ошибкой |
+| GitHub Pages base | `/PANELLON/` | Проект деплоится как project page, не user page |
+| CI pipeline | lint → test → build → deploy | Deploy только при push в main; PR — только проверки |

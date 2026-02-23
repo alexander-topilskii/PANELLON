@@ -64,31 +64,31 @@
 
 ---
 
-## Фаза 0 — Project Setup & CI/CD [M0]
+## Фаза 0 — Project Setup & CI/CD [M0] ✅
 
 [Детальный план](docs/phases/phase-0-setup.md)
 
-- [ ] 0.1 Инициализация и зависимости
-- [ ] 0.2 Настройка CI/CD (GitHub Actions)
-- [ ] 0.3 Базовый цикл приложения (App Shell)
+- [x] 0.1 Инициализация и зависимости
+- [x] 0.2 Настройка CI/CD (GitHub Actions)
+- [x] 0.3 Базовый цикл приложения (App Shell)
 
 ---
 
-## Фаза 1 — Core Boot [M0]
+## Фаза 1 — Core Boot [M0] ✅
 
 [Детальный план](docs/phases/phase-1-core-boot.md)
 
-- [ ] 1.1 Ходьба (first-person controls, коллизия)
-- [ ] 1.2 Seed-система и стартовый экран
+- [x] 1.1 Ходьба (first-person controls, коллизия)
+- [x] 1.2 Seed-система и стартовый экран
 
 ---
 
-## Фаза 2 — Вертикальный loop [M1]
+## Фаза 2 — Вертикальный loop [M1] ✅
 
 [Детальный план](docs/phases/phase-2-vertical-loop.md)
 
-- [ ] 2.1 Этажи 0 и 1–5 (шаблоны, HUD)
-- [ ] 2.2 Лестницы и fade-переходы
+- [x] 2.1 Этажи 0 и 1–5 (шаблоны, HUD)
+- [x] 2.2 Лестницы и fade-переходы
 
 ---
 
