@@ -14,6 +14,8 @@ export class Engine {
   private updateCallbacks: Array<(dt: number, elapsed: number) => void> = [];
   private running = false;
   private rafId = 0;
+  private renderOverride: ((renderer: THREE.WebGLRenderer) => void) | null = null;
+  private resizeCallbacks: Array<(w: number, h: number) => void> = [];
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -38,6 +40,19 @@ export class Engine {
     this.updateCallbacks.push(cb);
   }
 
+  /**
+   * When set, this function replaces the default `renderer.render(scene, camera)`.
+   * Used by RoomRenderer to take over rendering while the player is inside a room.
+   * Pass `null` to restore normal corridor rendering.
+   */
+  setRenderOverride(fn: ((renderer: THREE.WebGLRenderer) => void) | null): void {
+    this.renderOverride = fn;
+  }
+
+  onResize(cb: (w: number, h: number) => void): void {
+    this.resizeCallbacks.push(cb);
+  }
+
   start(): void {
     if (this.running) return;
     this.running = true;
@@ -57,7 +72,11 @@ export class Engine {
       cb(this.clock.delta, this.clock.elapsed);
     }
 
-    this.renderer.render(this.scene, this.camera);
+    if (this.renderOverride) {
+      this.renderOverride(this.renderer);
+    } else {
+      this.renderer.render(this.scene, this.camera);
+    }
     this.rafId = requestAnimationFrame(this.loop);
   };
 
@@ -67,6 +86,7 @@ export class Engine {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
+    for (const cb of this.resizeCallbacks) cb(w, h);
   };
 
   dispose(): void {

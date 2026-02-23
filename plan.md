@@ -106,7 +106,7 @@
 
 ---
 
-## Фаза 4 — Raymarching-комнаты [M3]
+## Фаза 4 — Raymarching-комнаты [M3] ✅
 
 [Детальный план](docs/phases/phase-4-raymarching-rooms.md)
 

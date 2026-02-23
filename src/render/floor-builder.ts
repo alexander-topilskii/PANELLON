@@ -2,12 +2,14 @@ import * as THREE from 'three';
 import type { FloorDescriptor } from '@/world-gen/floor-descriptor';
 import { createStairPad } from './stair-mesh';
 import { buildCorridorMeshes, disposeCorridorRuntime, type CorridorRuntime } from './corridor-builder';
+import { buildRoomWalls, type DoorInfo } from './door-builder';
 import { type MazeGrid } from '@/world-gen/maze';
 import { CELL_SIZE, CEILING_HEIGHT } from '@/shared/constants';
 
 const WALL_COLOR = 0xb0a890;
 const FLOOR_COLOR = 0x8a8070;
 const CEILING_COLOR = 0x999080;
+const ROOM_WALL_COLOR = 0xa09880;
 
 export interface FloorRuntime {
   group: THREE.Group;
@@ -16,6 +18,7 @@ export interface FloorRuntime {
   lights: THREE.Light[];
   wallBoxes: THREE.Box3[];
   corridorChunks: CorridorRuntime[];
+  doors: DoorInfo[];
   maze?: MazeGrid;
 }
 
@@ -105,23 +108,36 @@ export function buildFloor(desc: FloorDescriptor): FloorRuntime {
     lights,
     wallBoxes: [],
     corridorChunks: [],
+    doors: [],
   };
 }
 
 /**
- * Builds a procedural floor (6+) with maze corridors.
+ * Builds a procedural floor (6+) with maze corridors and room walls.
  */
-export function buildProceduralFloor(desc: FloorDescriptor, maze: MazeGrid): FloorRuntime {
+export function buildProceduralFloor(
+  desc: FloorDescriptor,
+  maze: MazeGrid,
+  globalSeed: number,
+  floorNum: number,
+): FloorRuntime {
   const group = new THREE.Group();
   const side = maze.side;
   const halfSize = (side * CELL_SIZE) / 2;
   const margin = 0.25;
 
-  // Build corridor meshes for the whole grid (chunking handled separately for big grids)
   const corridorRuntime = buildCorridorMeshes(maze, 0, 0, side, side);
   group.add(corridorRuntime.group);
 
-  // Lighting: one point light every ~4 cells
+  const roomWallMat = new THREE.MeshStandardMaterial({
+    color: ROOM_WALL_COLOR,
+    roughness: 0.85,
+  });
+  const roomWalls = buildRoomWalls(maze, globalSeed, floorNum, roomWallMat);
+  group.add(roomWalls.group);
+
+  const allWallBoxes = [...corridorRuntime.wallBoxes, ...roomWalls.wallBoxes];
+
   const lights: THREE.Light[] = [];
   const lightSpacing = 4;
   for (let z = 0; z < side; z += lightSpacing) {
@@ -135,7 +151,6 @@ export function buildProceduralFloor(desc: FloorDescriptor, maze: MazeGrid): Flo
     }
   }
 
-  // Stairs
   const stairs: FloorRuntime['stairs'] = [];
   for (const stairDesc of desc.stairs) {
     const { group: stairGroup, triggerBox } = createStairPad(stairDesc);
@@ -153,8 +168,9 @@ export function buildProceduralFloor(desc: FloorDescriptor, maze: MazeGrid): Flo
       maxZ: halfSize - margin,
     },
     lights,
-    wallBoxes: corridorRuntime.wallBoxes,
+    wallBoxes: allWallBoxes,
     corridorChunks: [corridorRuntime],
+    doors: roomWalls.doors,
     maze,
   };
 }

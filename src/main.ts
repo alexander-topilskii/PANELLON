@@ -7,6 +7,7 @@ import { StartScreen } from './ui/start-screen';
 import { FadeOverlay } from './ui/fade-overlay';
 import { HUD } from './ui/hud';
 import { resolveSeed, persistSeed, seedToGlobal } from './shared/seed';
+import { RoomRenderer } from './render/room-renderer';
 
 function checkWebGL2(): boolean {
   const testCanvas = document.createElement('canvas');
@@ -52,6 +53,9 @@ function bootstrap(): void {
   const hud = new HUD(uiRoot);
   hud.hide();
 
+  const roomRenderer = new RoomRenderer(engine.renderer);
+  engine.onResize((w, h) => roomRenderer.resize(w, h));
+
   let player: PlayerController | null = null;
   let floorMgr: FloorManager | null = null;
 
@@ -81,7 +85,16 @@ function bootstrap(): void {
     }
 
     if (!floorMgr) {
-      floorMgr = new FloorManager(engine.scene, player, fade, hud, ambient);
+      floorMgr = new FloorManager(
+        engine.scene,
+        player,
+        fade,
+        hud,
+        ambient,
+        engine,
+        roomRenderer,
+        sm,
+      );
     }
 
     floorMgr.setGlobalSeed(globalSeed);
@@ -89,9 +102,7 @@ function bootstrap(): void {
 
     engine.onUpdate((dt) => {
       if (!floorMgr || !player) return;
-      // For special floors (0–5): bounds-only collision via PlayerController
-      // For maze floors (6+): wall collision handled by FloorManager
-      if (floorMgr.wallBoxes.length === 0) {
+      if (floorMgr.wallBoxes.length === 0 && !floorMgr.isInRoom) {
         player.update(dt, floorMgr.bounds);
       }
       floorMgr.update(dt);
