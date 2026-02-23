@@ -2,16 +2,17 @@
 
 ## Milestone M0 — Core Boot
 
-plan.md: фаза 1 (этапы 1.1, 1.2)
+plan.md: фаза 0 (этапы 0.1–0.3) + фаза 1 (этапы 1.1, 1.2)
 
 Scope:
 
-- project bootstrap;
+- project bootstrap, CI/CD, app shell;
 - first-person controls;
 - start seed flow.
 
 DoD:
 
+- project builds and deploys to GitHub Pages;
 - user can start session with seed;
 - stable game loop and camera control;
 - pause/unlock works.

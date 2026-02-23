@@ -2,30 +2,38 @@
 
 **Цель:** Запустить минимально играбельный слой: управление от первого лица и систему Seed-ов.
 
-## 1.1 Ходьба (First-Person Controls & Physics)
-**Что делаем:**
-- Инициализируем камеру (`PerspectiveCamera`) и добавляем ее в сцену.
-- Реализуем контроллер `PointerLockControls` (встроенный в Three.js или свой), чтобы мышь управляла обзором.
-- Добавляем слушатели событий (WASD для движения).
-- Создаем тестовую "коробку" 6×6×2.5 м (комната), на которую накладываем простейшие материалы (MeshBasicMaterial или MeshStandardMaterial с сеткой/grid).
-- Реализуем физику: Y зафиксирован на высоте глаз (~1.7 м от пола), движение происходит только по X и Z. Коллизии пока простейшие (не выходим за пределы тестовой коробки).
+**Ключевые документы:**
 
-**Детали реализации:**
-- Скрипт `app/input/controls.ts` (или аналогичный), хранящий нормализованный вектор движения `(dx, dz)`.
-- Интеграция с Game Loop из Фазы 0 для обновления позиции с учетом `deltaTime`.
+- [../ARCHITECTURE.md](../ARCHITECTURE.md) — модули `core` (game loop, state machine), `input` (controls)
+- [../DETERMINISM_CONTRACT.md](../DETERMINISM_CONTRACT.md) — mulberry32 hash, PRNG, приоритет seed
+- [../TECH_SPEC.md](../TECH_SPEC.md) §2 — split-axis коллизия
+- [../UX_FLOWS.md](../UX_FLOWS.md) §1 (start/seed flow), §4 (pause/pointer lock)
+- [../ADR/0002-determinism-contract.md](../ADR/0002-determinism-contract.md) — контракт детерминизма
+
+---
+
+## 1.1 Ходьба (First-Person Controls & Physics)
+
+Тестовая комната 6×6×2.5 м — это будущий вестибюль этажа 0. В фазе 2 к нему добавится лестница.
+
+- [ ] Инициализировать камеру (`PerspectiveCamera`, высота глаз ~1.7 м)
+- [ ] Реализовать PointerLockControls (мышь → обзор, Escape → unlock)
+- [ ] Добавить WASD-движение (нормализованный вектор `(dx, dz)` × `deltaTime`)
+- [ ] Создать тестовую комнату 6×6×2.5 м (пол, стены, потолок — MeshStandardMaterial)
+- [ ] Реализовать коллизию: Y зафиксирован, bounds check по X и Z (split-axis)
 
 ## 1.2 Seed-система и стартовый экран
-**Что делаем:**
-- Пишем детерминированную хэш-функцию `mulberry32` (см. `DETERMINISM_CONTRACT.md`).
-- Реализуем стартовый экран (HTML over Canvas): простое меню с полем ввода seed и кнопкой "Войти".
-- Логика приоритетов: чтение из `URLSearchParams` -> поле ввода -> `localStorage` -> дефолт "official".
-- При старте генерируем `globalSeed` и скрываем UI стартового экрана (снимая Pointer Lock, если нужно).
 
-**Детали реализации:**
-- Добавляем класс/модуль `SeedManager`.
-- Настраиваем смену состояний (State Machine): `MENU` -> `PLAYING`.
+- [ ] Реализовать `mulberry32` hash (строка → число) и seedable PRNG
+- [ ] Создать стартовый экран (HTML over canvas): поле seed + кнопка «Войти»
+- [ ] Реализовать приоритет seed: URL `?seed=...` > input > localStorage > дефолт `"official"`
+- [ ] Настроить state machine: `MENU` → `PLAYING`
+
+---
 
 **MVP (Definition of Done):**
-- Запускаю игру -> вижу стартовый экран.
-- Ввожу seed, жму старт -> мышь лочится, хожу WASD по пустой комнате 6х6м.
-- Escape -> анлок мыши, пауза.
+
+- [ ] Запускаю → вижу стартовый экран
+- [ ] Ввожу seed, жму старт → мышь лочится, хожу WASD по комнате 6×6 м
+- [ ] Escape → анлок мыши
+- [ ] Один seed → одно поведение PRNG (тест детерминизма)

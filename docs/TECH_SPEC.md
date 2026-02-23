@@ -51,7 +51,11 @@ Cache key format:
   - old `cache` entries ignored or soft-cleaned;
   - `archive` preserved.
 
-## 6. Failure Modes
+## 6. Runtime Requirements
+
+- **WebGL2 required.** Checked at startup via `WebGL.isWebGL2Available()`.
+
+## 7. Failure Modes
 
 - WebGL2 unavailable -> blocking fallback screen.
 - Shader compile failures -> fallback room shader + telemetry event.

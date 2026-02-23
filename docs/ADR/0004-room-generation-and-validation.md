@@ -31,6 +31,6 @@
 ## Related
 
 - [../TECH_SPEC.md](../TECH_SPEC.md)
-- [../SHADER_GRAMMAR.md](../SHADER_GRAMMAR.md)
+- [../SHADER_PIPELINE.md](../SHADER_PIPELINE.md)
 - [../TEST_PLAN.md](../TEST_PLAN.md)
 - [0002-determinism-contract.md](0002-determinism-contract.md)
