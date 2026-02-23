@@ -51,6 +51,8 @@ export class ShaderValidator {
         uResolution: { value: new THREE.Vector2(SAMPLE_SIZE, SAMPLE_SIZE) },
         uFov: { value: FOV_RAD },
         uTime: { value: 0 },
+        uColorSeed: { value: 0.5 },
+        uTier: { value: 1 },
       },
       depthTest: false,
       depthWrite: false,

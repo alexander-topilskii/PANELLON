@@ -78,6 +78,14 @@ export class RoomRenderer {
     this.blitScene.add(this.blitQuad);
   }
 
+  private colorSeed = 0;
+  private tier = 1;
+
+  setRoomParams(colorSeed: number, tier: number): void {
+    this.colorSeed = colorSeed;
+    this.tier = tier;
+  }
+
   /**
    * Compile a new room shader from an SDF body.
    * On compile error, falls back to gradient sphere and stores the error.
@@ -114,6 +122,8 @@ export class RoomRenderer {
     u.uResolution!.value.set(this.renderTarget.width, this.renderTarget.height);
     u.uFov!.value = FOV_RAD;
     u.uTime!.value = elapsed;
+    u.uColorSeed!.value = this.colorSeed;
+    u.uTier!.value = this.tier;
 
     this.renderer.setRenderTarget(this.renderTarget);
     this.renderer.render(this.roomScene, this.orthoCamera);
@@ -147,6 +157,8 @@ export class RoomRenderer {
         uResolution: { value: new THREE.Vector2() },
         uFov: { value: FOV_RAD },
         uTime: { value: 0 },
+        uColorSeed: { value: 0 },
+        uTier: { value: 1 },
       },
       depthTest: false,
       depthWrite: false,

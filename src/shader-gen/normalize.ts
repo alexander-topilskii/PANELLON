@@ -107,13 +107,71 @@ function estimateBounds(node: SDFNode): Bounds {
     case 'repeat': {
       const cb = estimateBounds(node.child);
       const inflate = 1.3;
+      return inflatedBounds(cb, inflate);
+    }
+
+    case 'displace':
+    case 'fbmDisplace': {
+      const cb = estimateBounds(node.child);
+      const amp = node.amplitude;
       return {
-        minX: cb.minX * inflate, maxX: cb.maxX * inflate,
-        minY: cb.minY * inflate, maxY: cb.maxY * inflate,
-        minZ: cb.minZ * inflate, maxZ: cb.maxZ * inflate,
+        minX: cb.minX - amp, maxX: cb.maxX + amp,
+        minY: cb.minY - amp, maxY: cb.maxY + amp,
+        minZ: cb.minZ - amp, maxZ: cb.maxZ + amp,
+      };
+    }
+
+    case 'fractalRepeat': {
+      const cb = estimateBounds(node.child);
+      return inflatedBounds(cb, 1.5);
+    }
+
+    case 'menger': {
+      const [cx, cy, cz] = node.center;
+      const s = node.size;
+      return {
+        minX: cx - s, maxX: cx + s,
+        minY: cy - s, maxY: cy + s,
+        minZ: cz - s, maxZ: cz + s,
+      };
+    }
+
+    case 'sierpinski': {
+      const [cx, cy, cz] = node.center;
+      const r = 1.5;
+      return {
+        minX: cx - r, maxX: cx + r,
+        minY: cy - r, maxY: cy + r,
+        minZ: cz - r, maxZ: cz + r,
+      };
+    }
+
+    case 'rotateY':
+    case 'pulse':
+    case 'slide': {
+      const cb = estimateBounds(node.child);
+      const inflate = 1.2;
+      return inflatedBounds(cb, inflate);
+    }
+
+    case 'morph': {
+      const ba = estimateBounds(node.a);
+      const bb = estimateBounds(node.b);
+      return {
+        minX: Math.min(ba.minX, bb.minX), maxX: Math.max(ba.maxX, bb.maxX),
+        minY: Math.min(ba.minY, bb.minY), maxY: Math.max(ba.maxY, bb.maxY),
+        minZ: Math.min(ba.minZ, bb.minZ), maxZ: Math.max(ba.maxZ, bb.maxZ),
       };
     }
   }
+}
+
+function inflatedBounds(b: Bounds, factor: number): Bounds {
+  return {
+    minX: b.minX * factor, maxX: b.maxX * factor,
+    minY: b.minY * factor, maxY: b.maxY * factor,
+    minZ: b.minZ * factor, maxZ: b.maxZ * factor,
+  };
 }
 
 function shiftCenter(node: SDFNode, dx: number, dy: number, dz: number): void {
@@ -123,11 +181,11 @@ function shiftCenter(node: SDFNode, dx: number, dy: number, dz: number): void {
     node.center[2] -= dz;
   }
   if ('a' in node && 'b' in node) {
-    shiftCenter(node.a, dx, dy, dz);
-    shiftCenter(node.b, dx, dy, dz);
+    shiftCenter(node.a as SDFNode, dx, dy, dz);
+    shiftCenter(node.b as SDFNode, dx, dy, dz);
   }
   if ('child' in node) {
-    shiftCenter(node.child, dx, dy, dz);
+    shiftCenter(node.child as SDFNode, dx, dy, dz);
   }
 }
 
@@ -178,6 +236,38 @@ function scaleNode(node: SDFNode, s: number): void {
       node.period[2] *= s;
       scaleNode(node.child, s);
       break;
+    case 'displace':
+      node.amplitude *= s;
+      scaleNode(node.child, s);
+      break;
+    case 'fbmDisplace':
+      node.amplitude *= s;
+      scaleNode(node.child, s);
+      break;
+    case 'fractalRepeat':
+      node.scale *= s;
+      scaleNode(node.child, s);
+      break;
+    case 'menger':
+      node.size *= s;
+      node.center[0] *= s;
+      node.center[1] *= s;
+      node.center[2] *= s;
+      break;
+    case 'sierpinski':
+      node.center[0] *= s;
+      node.center[1] *= s;
+      node.center[2] *= s;
+      break;
+    case 'rotateY':
+    case 'pulse':
+    case 'slide':
+      scaleNode(node.child, s);
+      break;
+    case 'morph':
+      scaleNode(node.a, s);
+      scaleNode(node.b, s);
+      break;
   }
 }
 
@@ -203,10 +293,10 @@ function clampAspectRatios(node: SDFNode): void {
     }
   }
   if ('a' in node && 'b' in node) {
-    clampAspectRatios(node.a);
-    clampAspectRatios(node.b);
+    clampAspectRatios(node.a as SDFNode);
+    clampAspectRatios(node.b as SDFNode);
   }
   if ('child' in node) {
-    clampAspectRatios(node.child);
+    clampAspectRatios(node.child as SDFNode);
   }
 }

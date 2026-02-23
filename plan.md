@@ -75,6 +75,11 @@
 | Minimap cache               | **Offscreen canvas.** Стены лабиринта рисуются один раз при `setFloorData()` в offscreen canvas. Каждый кадр — `drawImage` вместо итерации по N² ячейкам.                                                                      |
 | Spatial hash (triggers)     | **Дверные trigger-зоны** индексируются в `SpatialHash`. `updateCorridor` проверяет только двери из 9 соседних бакетов, а не все на этаже.                                                                                       |
 | Звук                        | Вне скоупа. После фазы 7.                                                                                                                                                                                                       |
+| Превью-текстуры             | **64×64 WebGLRenderTarget на дверь.** Отдельный RT на каждый превью (не пул). Камера 1.5 м внутрь комнаты, направлена на центр. Lazy-генерация при ≤ 2 ячейки, max 2 compile/frame.                                               |
+| noise3D в шейдерах          | **Value noise** через permutation-хеш (mod-арифметика). Без texture lookup. Используется в displace и fbm.                                                                                                                       |
+| Цвет комнат (HSV)           | **Tier-зависимый.** Tier 1 = бежевый монохром, Tier 2 = лёгкий оттенок по normal, Tier 3 = hue по позиции + время, Tier 4 = полный HSV + sin-пульсация. Через `uColorSeed` и `uTier` uniforms.                                  |
+| Menger/Sierpinski            | **Stand-alone primitives**, не modifiers. Iterative SDF, до 6/8 итераций. Появляются на этажах 151+.                                                                                                                             |
+| Вероятности грамматики       | **Взвешенные категории:** combiner 45%, modifier 15%, noise 12%, animation 12%, fractal 10%. Leaf-wrap: anim 25%, noise 15%.                                                                                                     |
 
 ---
 
@@ -209,7 +214,7 @@
 
 ---
 
-## Фаза 5 — Качество контента [M4]
+## Фаза 5 — Качество контента [M4] ✅
 
 [Детальный план](docs/phases/phase-5-content-quality.md)
 

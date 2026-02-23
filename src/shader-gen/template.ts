@@ -37,6 +37,14 @@ uniform mat3  uCameraRot;
 uniform vec2  uResolution;
 uniform float uTime;
 uniform float uFov;
+uniform float uColorSeed;
+uniform float uTier;
+
+vec3 hsv2rgb(vec3 c) {
+  vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
 
 `;
 
@@ -83,7 +91,21 @@ void main() {
 
     float amb = 0.15 + 0.05 * n.y;
 
-    vec3 baseColor = vec3(0.7, 0.65, 0.6);
+    vec3 baseColor;
+    if (uTier < 1.5) {
+      baseColor = vec3(0.7, 0.65, 0.6);
+    } else if (uTier < 2.5) {
+      float hue = uColorSeed + atan(n.x, n.z) * 0.05;
+      baseColor = hsv2rgb(vec3(hue, 0.25, 0.7));
+    } else if (uTier < 3.5) {
+      float hue = uColorSeed + length(p.xz) * 0.1 + uTime * 0.03;
+      baseColor = hsv2rgb(vec3(hue, 0.4, 0.75));
+    } else {
+      float hue = uColorSeed + dot(p, n) * 0.15 + sin(uTime * 0.5) * 0.1;
+      float sat = 0.5 + 0.2 * sin(p.y * 3.0 + uTime);
+      baseColor = hsv2rgb(vec3(hue, sat, 0.8));
+    }
+
     col = baseColor * (amb + 0.75 * diff) + vec3(0.3) * spec;
   }
 

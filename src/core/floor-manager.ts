@@ -12,12 +12,13 @@ import type { RoomRenderer } from '@/render/room-renderer';
 import type { StateMachine } from './state-machine';
 import type { DoorInfo } from '@/render/door-builder';
 import { roomHash } from '@/shared/hash';
-import { ROOM_SIZE } from '@/shared/constants';
+import { ROOM_SIZE, CELL_SIZE, GEN_VERSION } from '@/shared/constants';
 import type { MinimapFloorData } from '@/ui/minimap';
 import { FALLBACK_GRADIENT_SDF } from '@/shader-gen';
 import { FloorRoomCache } from '@/shader-gen/room-cache';
 import { ShaderValidator } from '@/shader-gen/validator';
 import type { ShaderDebug } from '@/ui/shader-debug';
+import { PreviewRenderer } from '@/render/preview-renderer';
 
 const EYE_HEIGHT = 1.7;
 const WALK_SPEED = 3.5;
@@ -56,6 +57,10 @@ export class FloorManager {
   private validator: ShaderValidator;
   private onFloorLoadCallbacks: Array<() => void> = [];
   private doorHash: SpatialHash | null = null;
+  private previewRenderer: PreviewRenderer;
+  private previewGenerated = new Set<string>();
+  private readonly PREVIEW_RANGE_SQ = (CELL_SIZE * 2) * (CELL_SIZE * 2);
+  private readonly MAX_PREVIEWS_PER_FRAME = 2;
 
   bounds = { minX: -2.75, maxX: 2.75, minZ: -2.75, maxZ: 2.75 };
   wallBoxes: THREE.Box3[] = [];
@@ -73,6 +78,7 @@ export class FloorManager {
     private readonly shaderDebug?: ShaderDebug,
   ) {
     this.validator = new ShaderValidator(engine.renderer);
+    this.previewRenderer = new PreviewRenderer(engine.renderer);
   }
 
   get currentFloor(): number {
@@ -191,10 +197,49 @@ export class FloorManager {
     }
   }
 
+  private updatePreviews(): void {
+    if (!this.current || !this.roomCache) return;
+
+    const px = this.player.position.x;
+    const pz = this.player.position.z;
+    let generated = 0;
+
+    for (const door of this.current.doors) {
+      if (generated >= this.MAX_PREVIEWS_PER_FRAME) break;
+
+      const key = `${door.cellX},${door.cellZ}`;
+      if (this.previewGenerated.has(key)) continue;
+
+      const dx = door.worldX - px;
+      const dz = door.worldZ - pz;
+      if (dx * dx + dz * dz > this.PREVIEW_RANGE_SQ) continue;
+
+      this.previewGenerated.add(key);
+      const entry = this.roomCache.generateRoom(door.cellX, door.cellZ);
+      if (entry.state !== 'valid' || !entry.sdfCode) continue;
+
+      const rid = roomHash(GEN_VERSION, this.globalSeed, this.floorNum, door.cellX, door.cellZ);
+      const colorSeed = (rid & 0xffff) / 65536;
+      const tier = floorToTier(this.floorNum);
+      const rt = this.previewRenderer.renderPreview(entry.sdfCode, door.wallSide, colorSeed, tier);
+      if (rt) {
+        const mat = door.previewPlane.material as THREE.MeshBasicMaterial;
+        mat.map = rt.texture;
+        mat.color.set(0xffffff);
+        mat.opacity = 1.0;
+        mat.needsUpdate = true;
+        door.previewPlane.visible = true;
+        door.previewPlane.userData.previewRT = rt;
+        generated++;
+      }
+    }
+  }
+
   private updateCorridor(dt: number): void {
     if (!this.current) return;
 
     this.updateLights();
+    this.updatePreviews();
 
     if (this.wallHash && this.player.pointerLock.locked) {
       const { dx, dz } = this.player.keyboard.getMovement();
@@ -356,6 +401,11 @@ export class FloorManager {
     this.player.position.z = worldZ - door.roomCenterZ;
     this.player.camera.position.copy(this.player.position);
 
+    const rid = roomHash(GEN_VERSION, this.globalSeed, this.floorNum, door.cellX, door.cellZ);
+    const colorSeed = (rid & 0xffff) / 65536;
+    const tier = floorToTier(this.floorNum);
+    this.roomRenderer.setRoomParams(colorSeed, tier);
+
     const sdf = entry.sdfCode!;
     const ok = this.roomRenderer.setShader(sdf);
     if (!ok) {
@@ -406,12 +456,17 @@ export class FloorManager {
 
   private unloadCurrent(): void {
     if (this.current) {
+      for (const door of this.current.doors) {
+        const rt = door.previewPlane.userData.previewRT as THREE.WebGLRenderTarget | undefined;
+        rt?.dispose();
+      }
       disposeFloor(this.current);
       this.current = null;
       this.wallBoxes = [];
       this.wallHash = null;
       this.doorHash = null;
     }
+    this.previewGenerated.clear();
     if (this.roomCache) {
       this.roomCache.clear();
       this.roomCache = null;
@@ -460,5 +515,13 @@ export class FloorManager {
     if (this.inRoom) this.exitRoom();
     this.unloadCurrent();
     this.validator.dispose();
+    this.previewRenderer.dispose();
   }
+}
+
+function floorToTier(floor: number): number {
+  if (floor <= 20) return 1;
+  if (floor <= 50) return 2;
+  if (floor <= 150) return 3;
+  return 4;
 }

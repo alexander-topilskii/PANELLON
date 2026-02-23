@@ -29,6 +29,8 @@ export interface DoorInfo {
   triggerBox: THREE.Box3;
   /** Unit vector pointing from corridor into room through the door */
   inward: { x: number; z: number };
+  /** Plane mesh in the door opening for room preview texture */
+  previewPlane: THREE.Mesh;
 }
 
 export interface RoomWallsResult {
@@ -77,6 +79,8 @@ export function buildRoomWalls(
       if (doorWall !== 0) {
         const pos = doorWorldPos(cx, cz, hr, doorWall);
         const trigger = doorTrigger(pos.x, pos.z, doorWall);
+        const previewPlane = createPreviewPlane(pos.x, pos.z, doorWall);
+        group.add(previewPlane);
         doors.push({
           cellX: x,
           cellZ: z,
@@ -87,6 +91,7 @@ export function buildRoomWalls(
           roomCenterZ: cz,
           triggerBox: trigger,
           inward: doorInward(doorWall),
+          previewPlane,
         });
       }
     }
@@ -240,4 +245,43 @@ function doorTrigger(
     default:
       return new THREE.Box3();
   }
+}
+
+const PREVIEW_PLANE_W = DOOR_WIDTH - 0.1;
+const PREVIEW_PLANE_H = CEILING_HEIGHT - 0.2;
+
+/**
+ * Create a plane mesh at the door opening to display room preview.
+ * Starts with a dark semi-transparent material; texture assigned later.
+ */
+function createPreviewPlane(dx: number, dz: number, side: number): THREE.Mesh {
+  const geo = new THREE.PlaneGeometry(PREVIEW_PLANE_W, PREVIEW_PLANE_H);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0x111115,
+    transparent: true,
+    opacity: 0.85,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = CEILING_HEIGHT / 2;
+
+  switch (side) {
+    case WALL_N:
+      mesh.position.set(dx, CEILING_HEIGHT / 2, dz + 0.01);
+      mesh.rotation.y = Math.PI;
+      break;
+    case WALL_S:
+      mesh.position.set(dx, CEILING_HEIGHT / 2, dz - 0.01);
+      break;
+    case WALL_E:
+      mesh.position.set(dx - 0.01, CEILING_HEIGHT / 2, dz);
+      mesh.rotation.y = -Math.PI / 2;
+      break;
+    case WALL_W:
+      mesh.position.set(dx + 0.01, CEILING_HEIGHT / 2, dz);
+      mesh.rotation.y = Math.PI / 2;
+      break;
+  }
+
+  mesh.visible = false;
+  return mesh;
 }

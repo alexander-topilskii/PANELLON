@@ -75,9 +75,91 @@ export interface RepeatNode {
 
 export type ModifierNode = TwistNode | BendNode | RepeatNode;
 
+// ---------- Noise ----------
+
+export interface DisplaceNode {
+  type: 'displace';
+  amplitude: number;
+  frequency: number;
+  child: SDFNode;
+}
+
+export interface FbmDisplaceNode {
+  type: 'fbmDisplace';
+  amplitude: number;
+  frequency: number;
+  octaves: number;
+  child: SDFNode;
+}
+
+export type NoiseNode = DisplaceNode | FbmDisplaceNode;
+
+// ---------- Fractals ----------
+
+export interface FractalRepeatNode {
+  type: 'fractalRepeat';
+  iterations: number;
+  scale: number;
+  child: SDFNode;
+}
+
+export interface MengerNode {
+  type: 'menger';
+  iterations: number;
+  size: number;
+  center: [number, number, number];
+}
+
+export interface SierpinskiNode {
+  type: 'sierpinski';
+  iterations: number;
+  scale: number;
+  center: [number, number, number];
+}
+
+export type FractalNode = FractalRepeatNode | MengerNode | SierpinskiNode;
+
+// ---------- Animation ----------
+
+export interface RotateYNode {
+  type: 'rotateY';
+  speed: number;
+  child: SDFNode;
+}
+
+export interface PulseNode {
+  type: 'pulse';
+  amplitude: number;
+  frequency: number;
+  child: SDFNode;
+}
+
+export interface SlideNode {
+  type: 'slide';
+  axis: 'x' | 'y' | 'z';
+  amplitude: number;
+  frequency: number;
+  child: SDFNode;
+}
+
+export interface MorphNode {
+  type: 'morph';
+  frequency: number;
+  a: SDFNode;
+  b: SDFNode;
+}
+
+export type AnimationNode = RotateYNode | PulseNode | SlideNode | MorphNode;
+
 // ---------- Union ----------
 
-export type SDFNode = PrimitiveNode | CombineNode | ModifierNode;
+export type SDFNode =
+  | PrimitiveNode
+  | CombineNode
+  | ModifierNode
+  | NoiseNode
+  | FractalNode
+  | AnimationNode;
 
 // ---------- Floor tier ----------
 
@@ -87,6 +169,9 @@ export interface TierConfig {
   primitives: PrimitiveNode['type'][];
   combiners: CombineNode['op'][];
   modifiers: ModifierNode['type'][];
+  noise: NoiseNode['type'][];
+  fractals: (FractalNode['type'] | 'fractalRepeat')[];
+  animations: AnimationNode['type'][];
   maxNodes: number;
 }
 
@@ -98,6 +183,9 @@ export function getTierConfig(floor: number): TierConfig {
       primitives: ['sphere', 'box', 'cylinder'],
       combiners: ['union'],
       modifiers: [],
+      noise: [],
+      fractals: [],
+      animations: [],
       maxNodes: 3,
     };
   }
@@ -108,6 +196,9 @@ export function getTierConfig(floor: number): TierConfig {
       primitives: ['sphere', 'box', 'cylinder', 'torus', 'plane'],
       combiners: ['union', 'intersection', 'smoothUnion'],
       modifiers: ['twist'],
+      noise: ['displace'],
+      fractals: [],
+      animations: ['rotateY'],
       maxNodes: 6,
     };
   }
@@ -118,6 +209,9 @@ export function getTierConfig(floor: number): TierConfig {
       primitives: ['sphere', 'box', 'cylinder', 'torus', 'plane'],
       combiners: ['union', 'intersection', 'subtraction', 'smoothUnion'],
       modifiers: ['twist', 'bend', 'repeat'],
+      noise: ['displace', 'fbmDisplace'],
+      fractals: ['fractalRepeat'],
+      animations: ['rotateY', 'pulse', 'slide'],
       maxNodes: 10,
     };
   }
@@ -127,6 +221,9 @@ export function getTierConfig(floor: number): TierConfig {
     primitives: ['sphere', 'box', 'cylinder', 'torus', 'plane'],
     combiners: ['union', 'intersection', 'subtraction', 'smoothUnion'],
     modifiers: ['twist', 'bend', 'repeat'],
+    noise: ['displace', 'fbmDisplace'],
+    fractals: ['fractalRepeat', 'menger', 'sierpinski'],
+    animations: ['rotateY', 'pulse', 'slide', 'morph'],
     maxNodes: 16,
   };
 }
