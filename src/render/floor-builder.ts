@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import type { FloorDescriptor } from '@/world-gen/floor-descriptor';
 import { createStairPad } from './stair-mesh';
+import { buildCorridorMeshes, disposeCorridorRuntime, type CorridorRuntime } from './corridor-builder';
+import { type MazeGrid } from '@/world-gen/maze';
+import { CELL_SIZE, CEILING_HEIGHT } from '@/shared/constants';
 
 const WALL_COLOR = 0xb0a890;
 const FLOOR_COLOR = 0x8a8070;
@@ -11,11 +14,13 @@ export interface FloorRuntime {
   stairs: Array<{ triggerBox: THREE.Box3; direction: 'up' | 'down' }>;
   bounds: { minX: number; maxX: number; minZ: number; maxZ: number };
   lights: THREE.Light[];
+  wallBoxes: THREE.Box3[];
+  corridorChunks: CorridorRuntime[];
+  maze?: MazeGrid;
 }
 
 /**
- * Builds Three.js geometry for a floor from its descriptor.
- * Handles lobby (floor 0) and linear corridors (floors 1–5).
+ * Builds Three.js geometry for special floors (0–5).
  */
 export function buildFloor(desc: FloorDescriptor): FloorRuntime {
   const group = new THREE.Group();
@@ -32,18 +37,15 @@ export function buildFloor(desc: FloorDescriptor): FloorRuntime {
   });
   const ceilMat = new THREE.MeshStandardMaterial({ color: CEILING_COLOR, roughness: 0.9 });
 
-  // Floor
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(desc.width, desc.depth), floorMat);
   floor.rotation.x = -Math.PI / 2;
   group.add(floor);
 
-  // Ceiling
   const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(desc.width, desc.depth), ceilMat);
   ceiling.rotation.x = Math.PI / 2;
   ceiling.position.y = h;
   group.add(ceiling);
 
-  // Walls
   const wallLR = new THREE.PlaneGeometry(desc.depth, h);
   const wallFB = new THREE.PlaneGeometry(desc.width, h);
 
@@ -66,7 +68,6 @@ export function buildFloor(desc: FloorDescriptor): FloorRuntime {
   front.rotation.y = Math.PI;
   group.add(front);
 
-  // Lighting
   const lights: THREE.Light[] = [];
   if (desc.type === 'lobby') {
     const pt = new THREE.PointLight(0xffd599, 1.0, 12);
@@ -85,7 +86,6 @@ export function buildFloor(desc: FloorDescriptor): FloorRuntime {
     }
   }
 
-  // Stairs
   const stairs: FloorRuntime['stairs'] = [];
   for (const stairDesc of desc.stairs) {
     const { group: stairGroup, triggerBox } = createStairPad(stairDesc);
@@ -103,13 +103,66 @@ export function buildFloor(desc: FloorDescriptor): FloorRuntime {
       maxZ: hd - margin,
     },
     lights,
+    wallBoxes: [],
+    corridorChunks: [],
   };
 }
 
 /**
- * Disposes all geometry, materials, and textures in the floor group.
+ * Builds a procedural floor (6+) with maze corridors.
  */
+export function buildProceduralFloor(desc: FloorDescriptor, maze: MazeGrid): FloorRuntime {
+  const group = new THREE.Group();
+  const side = maze.side;
+  const halfSize = (side * CELL_SIZE) / 2;
+  const margin = 0.25;
+
+  // Build corridor meshes for the whole grid (chunking handled separately for big grids)
+  const corridorRuntime = buildCorridorMeshes(maze, 0, 0, side, side);
+  group.add(corridorRuntime.group);
+
+  // Lighting: one point light every ~4 cells
+  const lights: THREE.Light[] = [];
+  const lightSpacing = 4;
+  for (let z = 0; z < side; z += lightSpacing) {
+    for (let x = 0; x < side; x += lightSpacing) {
+      const wx = x * CELL_SIZE - halfSize + CELL_SIZE / 2;
+      const wz = z * CELL_SIZE - halfSize + CELL_SIZE / 2;
+      const pt = new THREE.PointLight(0xffd599, 0.5, 18);
+      pt.position.set(wx, CEILING_HEIGHT - 0.2, wz);
+      group.add(pt);
+      lights.push(pt);
+    }
+  }
+
+  // Stairs
+  const stairs: FloorRuntime['stairs'] = [];
+  for (const stairDesc of desc.stairs) {
+    const { group: stairGroup, triggerBox } = createStairPad(stairDesc);
+    group.add(stairGroup);
+    stairs.push({ triggerBox, direction: stairDesc.direction });
+  }
+
+  return {
+    group,
+    stairs,
+    bounds: {
+      minX: -halfSize + margin,
+      maxX: halfSize - margin,
+      minZ: -halfSize + margin,
+      maxZ: halfSize - margin,
+    },
+    lights,
+    wallBoxes: corridorRuntime.wallBoxes,
+    corridorChunks: [corridorRuntime],
+    maze,
+  };
+}
+
 export function disposeFloor(runtime: FloorRuntime): void {
+  for (const chunk of runtime.corridorChunks) {
+    disposeCorridorRuntime(chunk);
+  }
   runtime.group.traverse((obj) => {
     if (obj instanceof THREE.Mesh) {
       obj.geometry.dispose();

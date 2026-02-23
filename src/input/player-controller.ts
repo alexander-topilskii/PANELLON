@@ -18,7 +18,7 @@ export class PlayerController {
   private readonly right = new THREE.Vector3();
 
   constructor(
-    private readonly camera: THREE.PerspectiveCamera,
+    readonly camera: THREE.PerspectiveCamera,
     canvas: HTMLCanvasElement,
   ) {
     this.pointerLock = new PointerLockController(camera, canvas);

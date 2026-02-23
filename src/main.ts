@@ -74,7 +74,7 @@ function bootstrap(): void {
   function enterWorld(seedInput: string): void {
     const seed = resolveSeed(seedInput);
     persistSeed(seed);
-    void seedToGlobal(seed);
+    const globalSeed = seedToGlobal(seed);
 
     if (!player) {
       player = new PlayerController(engine.camera, canvas);
@@ -84,12 +84,17 @@ function bootstrap(): void {
       floorMgr = new FloorManager(engine.scene, player, fade, hud, ambient);
     }
 
+    floorMgr.setGlobalSeed(globalSeed);
     floorMgr.loadFloor(0);
 
     engine.onUpdate((dt) => {
       if (!floorMgr || !player) return;
-      player.update(dt, floorMgr.bounds);
-      floorMgr.update();
+      // For special floors (0–5): bounds-only collision via PlayerController
+      // For maze floors (6+): wall collision handled by FloorManager
+      if (floorMgr.wallBoxes.length === 0) {
+        player.update(dt, floorMgr.bounds);
+      }
+      floorMgr.update(dt);
     });
 
     sm.transition('corridor');
