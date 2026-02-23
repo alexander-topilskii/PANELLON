@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { KeyboardState } from './keyboard';
 import { PointerLockController } from './pointer-lock';
 
-const MOVE_SPEED = 3.5; // m/s — comfortable walking pace
+const WALK_SPEED = 3.5; // m/s
+const SPRINT_SPEED = 6.5; // m/s
 const EYE_HEIGHT = 1.7; // m
 
 /**
@@ -45,7 +46,7 @@ export class PlayerController {
 
     this.right.crossVectors(this.forward, THREE.Object3D.DEFAULT_UP).normalize();
 
-    const speed = MOVE_SPEED * dt;
+    const speed = (this.keyboard.sprinting ? SPRINT_SPEED : WALK_SPEED) * dt;
 
     // Split-axis collision (TECH_SPEC §2):
     // 1) attempt X, clamp

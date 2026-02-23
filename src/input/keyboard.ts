@@ -14,6 +14,10 @@ export class KeyboardState {
     return this.pressed.has(code);
   }
 
+  get sprinting(): boolean {
+    return this.pressed.has('ShiftLeft') || this.pressed.has('ShiftRight');
+  }
+
   /**
    * Returns a normalized 2D movement vector based on WASD.
    * +Z = forward (into screen), +X = right.
