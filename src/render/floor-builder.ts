@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { FloorDescriptor } from '@/world-gen/floor-descriptor';
 import { createStairPad } from './stair-mesh';
+import { createTeleportPad } from './teleport-pad';
 import { buildCorridorMeshes, disposeCorridorRuntime, type CorridorRuntime } from './corridor-builder';
 import { buildRoomWalls, type DoorInfo } from './door-builder';
 import { type MazeGrid } from '@/world-gen/maze';
@@ -79,10 +80,18 @@ export function buildFloor(desc: FloorDescriptor): FloorRuntime {
 
   const lights: THREE.Light[] = [];
   if (desc.type === 'lobby') {
-    const pt = new THREE.PointLight(0xffd599, 1.0, 12);
-    pt.position.set(0, h - 0.2, 0);
-    group.add(pt);
-    lights.push(pt);
+    const lxCount = Math.max(1, Math.ceil(desc.width / 6));
+    const lzCount = Math.max(1, Math.ceil(desc.depth / 6));
+    for (let lz = 0; lz < lzCount; lz++) {
+      for (let lx = 0; lx < lxCount; lx++) {
+        const px = -hw + 3 + lx * 6;
+        const pz = -hd + 3 + lz * 6;
+        const pt = new THREE.PointLight(0xffd599, 0.8, 14);
+        pt.position.set(px, h - 0.2, pz);
+        group.add(pt);
+        lights.push(pt);
+      }
+    }
   } else if (desc.type === 'linear') {
     const count = Math.ceil(desc.depth / 6);
     for (let i = 0; i < count; i++) {
@@ -102,9 +111,17 @@ export function buildFloor(desc: FloorDescriptor): FloorRuntime {
     stairs.push({ triggerBox, direction: stairDesc.direction });
   }
 
+  const teleports: TeleportRuntime[] = [];
+  for (const tp of desc.teleports) {
+    const { group: tpGroup, triggerBox } = createTeleportPad(tp);
+    group.add(tpGroup);
+    teleports.push({ triggerBox, targetFloor: tp.targetFloor });
+  }
+
   return {
     group,
     stairs,
+    teleports,
     bounds: {
       minX: -hw + margin,
       maxX: hw - margin,
@@ -115,7 +132,6 @@ export function buildFloor(desc: FloorDescriptor): FloorRuntime {
     wallBoxes: [],
     corridorChunks: [],
     doors: [],
-    teleports: [],
   };
 }
 

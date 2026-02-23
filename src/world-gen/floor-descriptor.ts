@@ -9,6 +9,11 @@ export interface StairDescriptor {
   direction: 'up' | 'down';
 }
 
+export interface TeleportDescriptor {
+  position: { x: number; z: number };
+  targetFloor: number;
+}
+
 export interface FloorDescriptor {
   number: number;
   type: FloorType;
@@ -16,21 +21,30 @@ export interface FloorDescriptor {
   depth: number;
   height: number;
   stairs: StairDescriptor[];
+  teleports: TeleportDescriptor[];
   spawn: { x: number; z: number };
   /** For procedural floors only */
   gridSide?: number;
 }
 
+const LOBBY_TELEPORT_FLOORS = [10, 20, 30, 50, 100];
+
 export function describeFloor(floorNum: number, globalSeed = 0): FloorDescriptor {
   if (floorNum === 0) {
+    const teleports: TeleportDescriptor[] = LOBBY_TELEPORT_FLOORS.map((target, i) => ({
+      position: { x: -6 + i * 3, z: -2 },
+      targetFloor: target,
+    }));
+
     return {
       number: 0,
       type: 'lobby',
-      width: 6,
-      depth: 6,
+      width: 20,
+      depth: 16,
       height: CEILING_HEIGHT,
-      stairs: [{ position: { x: 0, z: -2.5 }, direction: 'up' }],
-      spawn: { x: 0, z: 2 },
+      stairs: [{ position: { x: 0, z: -7 }, direction: 'up' }],
+      teleports,
+      spawn: { x: 0, z: 5 },
     };
   }
 
@@ -45,6 +59,7 @@ export function describeFloor(floorNum: number, globalSeed = 0): FloorDescriptor
         { position: { x: 0, z: -14 }, direction: 'up' },
         { position: { x: 0, z: 14 }, direction: 'down' },
       ],
+      teleports: [],
       spawn: { x: 0, z: 13 },
     };
   }
@@ -73,6 +88,7 @@ export function describeFloor(floorNum: number, globalSeed = 0): FloorDescriptor
       { position: { x: stairWorldX, z: stairWorldZ }, direction: 'up' },
       { position: { x: stairWorldX, z: stairWorldZ }, direction: 'down' },
     ],
+    teleports: [],
     spawn: { x: stairWorldX, z: stairWorldZ },
   };
 }

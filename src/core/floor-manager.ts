@@ -192,6 +192,14 @@ export class FloorManager {
       }
     }
 
+    // Teleport triggers
+    for (const tp of this.current.teleports) {
+      if (tp.triggerBox.intersectsBox(this.playerBox)) {
+        void this.transitionTo(tp.targetFloor, 'up');
+        return;
+      }
+    }
+
     // Stair triggers
     for (const stair of this.current.stairs) {
       if (stair.triggerBox.intersectsBox(this.playerBox)) {

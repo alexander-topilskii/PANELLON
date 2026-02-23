@@ -2,13 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { describeFloor } from './floor-descriptor';
 
 describe('describeFloor', () => {
-  it('floor 0 is lobby with one stair up', () => {
+  it('floor 0 is lobby with stair up and teleports', () => {
     const d = describeFloor(0);
     expect(d.type).toBe('lobby');
-    expect(d.width).toBe(6);
-    expect(d.depth).toBe(6);
+    expect(d.width).toBe(20);
+    expect(d.depth).toBe(16);
     expect(d.stairs).toHaveLength(1);
     expect(d.stairs[0]!.direction).toBe('up');
+    expect(d.teleports.length).toBeGreaterThan(0);
+    expect(d.teleports[0]!.targetFloor).toBe(10);
   });
 
   it('floors 1–5 are linear with two stairs', () => {
