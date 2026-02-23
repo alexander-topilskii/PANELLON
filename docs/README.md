@@ -4,15 +4,15 @@
 
 ## Матрица соответствия планов
 
-| plan.md (фаза.этап) | README этап | ROADMAP |
-|----------------------|-------------|---------|
-| 1.1, 1.2             | 0           | M0      |
-| 2.1, 2.2             | 1           | M1      |
-| 3.1, 3.2, 3.3        | 2           | M2      |
-| 4.1–4.7              | 3           | M3      |
-| 5.1–5.4              | 4           | M4      |
-| 6.1–6.3              | 5           | M5      |
-| 7.1, 7.2             | 6           | M6      |
+| plan.md (фаза.этап) | ROADMAP |
+|----------------------|---------|
+| 1.1, 1.2             | M0      |
+| 2.1, 2.2             | M1      |
+| 3.1, 3.2, 3.3        | M2      |
+| 4.1–4.7              | M3      |
+| 5.1–5.4              | M4      |
+| 6.1–6.3              | M5      |
+| 7.1, 7.2             | M6      |
 
 Связанные верхнеуровневые документы:
 
@@ -23,7 +23,9 @@
 ## Core
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — границы модулей и их взаимодействие
-- [TECH_SPEC.md](TECH_SPEC.md) — технические контракты и алгоритмы
+- [TECH_SPEC.md](TECH_SPEC.md) — базовые технические контракты
+- [DETERMINISM_CONTRACT.md](DETERMINISM_CONTRACT.md) — детерминизм и PRNG
+- [WORLD_GENERATION.md](WORLD_GENERATION.md) — топология лабиринта и генерация чанков
 - [ROADMAP.md](ROADMAP.md) — этапы реализации и Definition of Done
 
 ## Engineering
@@ -34,7 +36,7 @@
 
 ## Domain
 
-- [SHADER_GRAMMAR.md](SHADER_GRAMMAR.md) — правила грамматической генерации шейдеров
+- [SHADER_PIPELINE.md](SHADER_PIPELINE.md) — правила грамматической генерации, пайплайн и валидация шейдеров
 - [DATA_MODEL.md](DATA_MODEL.md) — схемы localStorage и IndexedDB
 - [UX_FLOWS.md](UX_FLOWS.md) — пользовательские сценарии и состояния
 
