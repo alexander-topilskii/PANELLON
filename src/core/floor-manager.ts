@@ -12,6 +12,7 @@ import type { StateMachine } from './state-machine';
 import type { DoorInfo } from '@/render/door-builder';
 import { roomHash } from '@/shared/hash';
 import { ROOM_SIZE } from '@/shared/constants';
+import type { MinimapFloorData } from '@/ui/minimap';
 import { FALLBACK_GRADIENT_SDF } from '@/shader-gen';
 import { FloorRoomCache } from '@/shader-gen/room-cache';
 import { ShaderValidator } from '@/shader-gen/validator';
@@ -50,6 +51,7 @@ export class FloorManager {
   private activeDoor: DoorInfo | null = null;
   private roomCache: FloorRoomCache | null = null;
   private validator: ShaderValidator;
+  private onFloorLoadCallbacks: Array<() => void> = [];
 
   bounds = { minX: -2.75, maxX: 2.75, minZ: -2.75, maxZ: 2.75 };
   wallBoxes: THREE.Box3[] = [];
@@ -77,6 +79,10 @@ export class FloorManager {
 
   setGlobalSeed(seed: number): void {
     this.globalSeed = seed;
+  }
+
+  onFloorLoad(cb: () => void): void {
+    this.onFloorLoadCallbacks.push(cb);
   }
 
   loadFloor(floorNum: number, arrivedVia: 'up' | 'down' | null = null): void {
@@ -115,6 +121,7 @@ export class FloorManager {
     this.hud.show();
 
     this.ambientLight.intensity = desc.type === 'linear' ? 0.2 : 0.35;
+    for (const cb of this.onFloorLoadCallbacks) cb();
   }
 
   private pickSpawn(
@@ -350,6 +357,33 @@ export class FloorManager {
       this.roomCache.clear();
       this.roomCache = null;
     }
+  }
+
+  getMinimapData(): MinimapFloorData | null {
+    if (!this.current) return null;
+    const runtime = this.current;
+    const desc = describeFloor(this.floorNum, this.globalSeed);
+
+    const stairs = runtime.stairs.map((s) => {
+      const center = new THREE.Vector3();
+      s.triggerBox.getCenter(center);
+      return { x: center.x, z: center.z, direction: s.direction };
+    });
+
+    const teleports = (runtime.teleports ?? []).map((t) => {
+      const center = new THREE.Vector3();
+      t.triggerBox.getCenter(center);
+      return { x: center.x, z: center.z, targetFloor: t.targetFloor };
+    });
+
+    return {
+      type: desc.type,
+      bounds: runtime.bounds,
+      maze: runtime.maze,
+      doors: runtime.doors,
+      stairs,
+      teleports,
+    };
   }
 
   dispose(): void {

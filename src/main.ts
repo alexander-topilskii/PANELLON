@@ -8,6 +8,7 @@ import { FadeOverlay } from './ui/fade-overlay';
 import { HUD } from './ui/hud';
 import { resolveSeed, persistSeed, seedToGlobal } from './shared/seed';
 import { RoomRenderer } from './render/room-renderer';
+import { Minimap } from './ui/minimap';
 
 function checkWebGL2(): boolean {
   const testCanvas = document.createElement('canvas');
@@ -56,6 +57,9 @@ function bootstrap(): void {
   const roomRenderer = new RoomRenderer(engine.renderer);
   engine.onResize((w, h) => roomRenderer.resize(w, h));
 
+  const minimap = new Minimap(uiRoot);
+  minimap.hide();
+
   let player: PlayerController | null = null;
   let floorMgr: FloorManager | null = null;
 
@@ -63,6 +67,7 @@ function bootstrap(): void {
     if (to === 'menu') {
       startScreen.show(enterWorld);
       hud.hide();
+      minimap.hide();
       if (player) player.pointerLock.unlock();
     }
     if (to === 'corridor') {
@@ -98,7 +103,14 @@ function bootstrap(): void {
     }
 
     floorMgr.setGlobalSeed(globalSeed);
+
+    floorMgr.onFloorLoad(() => {
+      const data = floorMgr!.getMinimapData();
+      if (data) minimap.setFloorData(data);
+    });
+
     floorMgr.loadFloor(0);
+    minimap.show();
 
     engine.onUpdate((dt) => {
       if (!floorMgr || !player) return;
@@ -106,6 +118,11 @@ function bootstrap(): void {
         player.update(dt, floorMgr.bounds);
       }
       floorMgr.update(dt);
+
+      const forward = new THREE.Vector3();
+      engine.camera.getWorldDirection(forward);
+      const yaw = Math.atan2(forward.x, -forward.z);
+      minimap.update(player.position.x, player.position.z, yaw);
     });
 
     sm.transition('corridor');

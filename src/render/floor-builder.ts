@@ -11,9 +11,15 @@ const FLOOR_COLOR = 0x8a8070;
 const CEILING_COLOR = 0x999080;
 const ROOM_WALL_COLOR = 0xa09880;
 
+export interface TeleportRuntime {
+  triggerBox: THREE.Box3;
+  targetFloor: number;
+}
+
 export interface FloorRuntime {
   group: THREE.Group;
   stairs: Array<{ triggerBox: THREE.Box3; direction: 'up' | 'down' }>;
+  teleports: TeleportRuntime[];
   bounds: { minX: number; maxX: number; minZ: number; maxZ: number };
   lights: THREE.Light[];
   wallBoxes: THREE.Box3[];
@@ -109,6 +115,7 @@ export function buildFloor(desc: FloorDescriptor): FloorRuntime {
     wallBoxes: [],
     corridorChunks: [],
     doors: [],
+    teleports: [],
   };
 }
 
@@ -171,6 +178,7 @@ export function buildProceduralFloor(
     wallBoxes: allWallBoxes,
     corridorChunks: [corridorRuntime],
     doors: roomWalls.doors,
+    teleports: [],
     maze,
   };
 }
