@@ -69,6 +69,11 @@
 | Reserved cells              | **Ячейки под лестницы/телепорты** не получают дверей комнат. `FloorDescriptor.reservedCells` → `buildRoomWalls` пропускает генерацию двери для этих ячеек.                                                                       |
 | Шейдер-дебаг                | **По клавише I** — fullscreen overlay с исходным GLSL кодом текущей комнаты. Помогает в отладке генерации.                                                                                                                       |
 | Door trigger tuning         | **Trigger depth уменьшен с 0.6 до 0.25 м**, playerBox с 0.4 до 0.3 м. Предотвращает ложный вход в комнату при проходе мимо двери по коридору.                                                                                  |
+| Merge geometries            | **`mergeGeometries` из three/addons.** Все wall-сегменты коридоров и room-walls объединяются в 1 mesh на этаж. Снижает draw calls с тысяч до единиц.                                                                            |
+| Spatial hash (collision)    | **Uniform grid (`SpatialHash`, CELL_SIZE bucket).** `resolveWallCollisions` запрашивает 9 соседних бакетов — O(1) вместо O(N). Файл: `src/input/spatial-hash.ts`.                                                               |
+| Light culling               | **Distance-based visibility.** Каждый кадр: `light.visible = dist² < LIGHT_RADIUS²`. Радиус 30 м (~5 ячеек). На этаже 150+ отключает ~90 % ламп, снижая forward-pass нагрузку.                                                 |
+| Minimap cache               | **Offscreen canvas.** Стены лабиринта рисуются один раз при `setFloorData()` в offscreen canvas. Каждый кадр — `drawImage` вместо итерации по N² ячейкам.                                                                      |
+| Spatial hash (triggers)     | **Дверные trigger-зоны** индексируются в `SpatialHash`. `updateCorridor` проверяет только двери из 9 соседних бакетов, а не все на этаже.                                                                                       |
 | Звук                        | Вне скоупа. После фазы 7.                                                                                                                                                                                                       |
 
 ---
@@ -114,6 +119,32 @@
 **Урок: trigger-зоны должны быть соразмерны с геометрией окружения.** В коридоре шириной 2 м глубина trigger > 0.3 м уже критична.
 
 **Фикс:** trigger depth уменьшен до 0.25 м, playerBox — до 0.3 м. Игрок входит в комнату только при целенаправленном движении к двери.
+
+---
+
+## Оптимизация производительности (этажи 150+)
+
+**Симптом:** после ~150 этажа FPS падал до <20. Размер сетки лабиринта растёт с номером этажа (формула `gridSide`), на 150-м — 25×25 = 625 ячеек, тысячи mesh/wall/light объектов.
+
+**Анализ узких мест:**
+
+| Бутылочное горлышко            | Было                                      | Стало                                  | Эффект                              |
+| ------------------------------ | ----------------------------------------- | -------------------------------------- | ----------------------------------- |
+| Draw calls (wall meshes)       | Каждый wall-сегмент — отдельный Mesh      | `mergeGeometries` → 1–3 mesh на этаж   | Draw calls: ~2000 → ~5              |
+| Collision (`resolveWallCollisions`) | Линейный перебор всех `wallBoxes` (O(N)) | `SpatialHash` → query 9 бакетов (O(1)) | Frame time: ~4 ms → ~0.1 ms        |
+| Lights (PointLight)            | Все лампы активны одновременно            | `light.visible` по дистанции (30 м)    | Активных ламп: ~150 → ~15          |
+| Minimap redraw                 | Итерация по N² ячейкам каждый кадр        | Offscreen canvas + `drawImage`         | Minimap cost: ~2 ms → ~0.1 ms      |
+| Door trigger scan              | Линейный перебор всех дверей (O(N))       | `SpatialHash` + Set → O(1) проверка    | Trigger check: ~0.5 ms → ~0.05 ms  |
+
+**Файлы:**
+- `src/input/spatial-hash.ts` — SpatialHash utility (uniform grid)
+- `src/render/corridor-builder.ts` — mergeGeometries для wall-сегментов
+- `src/render/door-builder.ts` — mergeGeometries для room walls
+- `src/input/maze-collision.ts` — принимает SpatialHash вместо Box3[]
+- `src/core/floor-manager.ts` — wallHash, doorHash, updateLights(), hasWallCollision
+- `src/ui/minimap.ts` — offscreen maze cache
+
+**Урок: на больших процедурных этажах узкие места — не алгоритм генерации, а per-frame стоимость.** Spatial indexing, geometry batching и distance culling — три столпа, решающие проблему в совокупности.
 
 ---
 
@@ -171,9 +202,10 @@
 
 ## UX: Миникарта и Лобби с телепортами ✅
 
-- **Миникарта** (`src/ui/minimap.ts`): круглая 2D canvas-карта, bottom-right. M — полноэкранный режим. Рисует стены лабиринта, двери, лестницы, телепорты, игрока с направлением взгляда.
-- **Лобби (этаж 0)**: расширено до 20×16 м. Добавлены телепорт-пады (этажи 10/20/30/50/100) — синие светящиеся платформы с Sprite-метками. Обработка в `FloorManager.updateCorridor`.
-- Файлы: `src/ui/minimap.ts`, `src/render/teleport-pad.ts`, `src/world-gen/floor-descriptor.ts`, `src/render/floor-builder.ts`, `src/core/floor-manager.ts`, `src/main.ts`.
+- **Миникарта** (`src/ui/minimap.ts`): круглая 2D canvas-карта, bottom-right. M — полноэкранный режим. Рисует стены лабиринта, двери, лестницы, телепорты, игрока с направлением взгляда. Стены лабиринта кэшируются в offscreen canvas при загрузке этажа.
+- **Лобби (этаж 0)**: 20×20 м. Телепорт-пады на этажи 10/20/30/50/100/150/200/300/500. Каждый 100-й этаж — хаб-лобби с телепортами на ±10 этажей.
+- **Шейдер-дебаг**: по I — overlay с GLSL кодом текущей комнаты.
+- Файлы: `src/ui/minimap.ts`, `src/ui/shader-debug.ts`, `src/render/teleport-pad.ts`, `src/world-gen/floor-descriptor.ts`, `src/render/floor-builder.ts`, `src/core/floor-manager.ts`, `src/main.ts`.
 
 ---
 

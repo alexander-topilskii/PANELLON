@@ -3,6 +3,7 @@ import { describeFloor, type FloorDescriptor } from '@/world-gen/floor-descripto
 import { generateMaze, WALL_N, WALL_S, WALL_E, WALL_W } from '@/world-gen/maze';
 import { buildFloor, buildProceduralFloor, disposeFloor, type FloorRuntime } from '@/render/floor-builder';
 import { resolveWallCollisions } from '@/input/maze-collision';
+import { SpatialHash } from '@/input/spatial-hash';
 import { FadeOverlay } from '@/ui/fade-overlay';
 import { HUD } from '@/ui/hud';
 import type { PlayerController } from '@/input/player-controller';
@@ -23,6 +24,7 @@ const WALK_SPEED = 3.5;
 const SPRINT_SPEED = 6.5;
 const ROOM_MARGIN = 0.25;
 const HALF_ROOM = ROOM_SIZE / 2;
+const LIGHT_RADIUS = 30;
 
 /**
  * Manages floor lifecycle, stair triggers, and room entry/exit.
@@ -53,9 +55,11 @@ export class FloorManager {
   private roomCache: FloorRoomCache | null = null;
   private validator: ShaderValidator;
   private onFloorLoadCallbacks: Array<() => void> = [];
+  private doorHash: SpatialHash | null = null;
 
   bounds = { minX: -2.75, maxX: 2.75, minZ: -2.75, maxZ: 2.75 };
   wallBoxes: THREE.Box3[] = [];
+  private wallHash: SpatialHash | null = null;
 
   constructor(
     private readonly scene: THREE.Scene,
@@ -77,6 +81,10 @@ export class FloorManager {
 
   get isInRoom(): boolean {
     return this.inRoom;
+  }
+
+  get hasWallCollision(): boolean {
+    return this.wallHash !== null;
   }
 
   setGlobalSeed(seed: number): void {
@@ -108,6 +116,16 @@ export class FloorManager {
     this.current = runtime;
     this.bounds = runtime.bounds;
     this.wallBoxes = runtime.wallBoxes;
+    this.wallHash = runtime.wallBoxes.length > 0
+      ? SpatialHash.fromBoxes(runtime.wallBoxes)
+      : null;
+
+    if (runtime.doors.length > 0) {
+      this.doorHash = new SpatialHash();
+      for (const d of runtime.doors) this.doorHash.insert(d.triggerBox);
+    } else {
+      this.doorHash = null;
+    }
 
     this.roomCache = new FloorRoomCache(
       this.globalSeed,
@@ -160,10 +178,25 @@ export class FloorManager {
     }
   }
 
+  private updateLights(): void {
+    if (!this.current) return;
+    const px = this.player.position.x;
+    const pz = this.player.position.z;
+    const r2 = LIGHT_RADIUS * LIGHT_RADIUS;
+
+    for (const light of this.current.lights) {
+      const dx = light.position.x - px;
+      const dz = light.position.z - pz;
+      light.visible = dx * dx + dz * dz < r2;
+    }
+  }
+
   private updateCorridor(dt: number): void {
     if (!this.current) return;
 
-    if (this.wallBoxes.length > 0 && this.player.pointerLock.locked) {
+    this.updateLights();
+
+    if (this.wallHash && this.player.pointerLock.locked) {
       const { dx, dz } = this.player.keyboard.getMovement();
       if (dx !== 0 || dz !== 0) {
         const forward = new THREE.Vector3();
@@ -178,7 +211,7 @@ export class FloorManager {
         const moveX = (right.x * dx + forward.x * dz) * speed;
         const moveZ = (right.z * dx + forward.z * dz) * speed;
 
-        resolveWallCollisions(this.player.position, moveX, moveZ, this.wallBoxes);
+        resolveWallCollisions(this.player.position, moveX, moveZ, this.wallHash);
         this.player.camera.position.copy(this.player.position);
       }
     }
@@ -186,15 +219,20 @@ export class FloorManager {
     const p = this.player.position;
     this.playerBox.setFromCenterAndSize(p, this.playerSize);
 
-    // Door triggers (only on procedural floors with doors)
-    for (const door of this.current.doors) {
-      if (door.triggerBox.intersectsBox(this.playerBox)) {
-        this.enterRoom(door);
-        return;
+    // Door triggers — spatial query for nearby trigger boxes
+    if (this.doorHash) {
+      const nearbyTriggers = this.doorHash.query(p.x, p.z);
+      const nearbySet = new Set(nearbyTriggers);
+      for (const door of this.current.doors) {
+        if (!nearbySet.has(door.triggerBox)) continue;
+        if (door.triggerBox.intersectsBox(this.playerBox)) {
+          this.enterRoom(door);
+          return;
+        }
       }
     }
 
-    // Teleport triggers
+    // Teleport triggers (few items, no spatial hash needed)
     for (const tp of this.current.teleports) {
       if (tp.triggerBox.intersectsBox(this.playerBox)) {
         void this.transitionTo(tp.targetFloor, 'up');
@@ -202,7 +240,7 @@ export class FloorManager {
       }
     }
 
-    // Stair triggers
+    // Stair triggers (few items)
     for (const stair of this.current.stairs) {
       if (stair.triggerBox.intersectsBox(this.playerBox)) {
         const targetFloor = stair.direction === 'up' ? this.floorNum + 1 : this.floorNum - 1;
@@ -371,6 +409,8 @@ export class FloorManager {
       disposeFloor(this.current);
       this.current = null;
       this.wallBoxes = [];
+      this.wallHash = null;
+      this.doorHash = null;
     }
     if (this.roomCache) {
       this.roomCache.clear();

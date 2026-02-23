@@ -37,6 +37,9 @@ export class Minimap {
   private expanded = false;
   private floorData: MinimapFloorData | null = null;
 
+  private mazeCache: HTMLCanvasElement | null = null;
+  private mazeCacheWorldSize = 0;
+
   constructor(uiRoot: HTMLElement) {
     this.canvas = document.createElement('canvas');
     this.canvas.id = 'minimap';
@@ -51,6 +54,10 @@ export class Minimap {
 
   setFloorData(data: MinimapFloorData): void {
     this.floorData = data;
+    this.mazeCache = null;
+    if (data.type === 'procedural' && data.maze) {
+      this.buildMazeCache(data.maze);
+    }
   }
 
   toggle(): void {
@@ -146,8 +153,8 @@ export class Minimap {
     if (!this.floorData) return;
     const dpr = Math.min(window.devicePixelRatio, 2);
 
-    if (this.floorData.type === 'procedural' && this.floorData.maze) {
-      this.drawMaze(ctx, toX, toY, scale, this.floorData.maze);
+    if (this.floorData.type === 'procedural' && this.mazeCache) {
+      this.drawMazeFromCache(ctx, toX, toY, scale);
     } else {
       const { bounds } = this.floorData;
       ctx.strokeStyle = WALL_STROKE;
@@ -198,26 +205,27 @@ export class Minimap {
     }
   }
 
-  private drawMaze(
-    ctx: CanvasRenderingContext2D,
-    toX: (wx: number) => number,
-    toY: (wz: number) => number,
-    _scale: number,
-    maze: MazeGrid,
-  ): void {
-    const dpr = Math.min(window.devicePixelRatio, 2);
-    const halfGrid = (maze.side * CELL_SIZE) / 2;
+  /**
+   * Pre-render the maze walls into an offscreen canvas once per floor load.
+   * This avoids iterating all cells every frame.
+   */
+  private buildMazeCache(maze: MazeGrid): void {
+    const pxPerCell = 6;
+    const size = maze.side * pxPerCell;
+    const off = document.createElement('canvas');
+    off.width = size;
+    off.height = size;
+    const ctx = off.getContext('2d')!;
+
     ctx.strokeStyle = WALL_STROKE;
-    ctx.lineWidth = 1 * dpr;
+    ctx.lineWidth = 1;
 
     for (let z = 0; z < maze.side; z++) {
       for (let x = 0; x < maze.side; x++) {
-        const wx = x * CELL_SIZE - halfGrid;
-        const wz = z * CELL_SIZE - halfGrid;
-        const x0 = toX(wx);
-        const y0 = toY(wz);
-        const x1 = toX(wx + CELL_SIZE);
-        const y1 = toY(wz + CELL_SIZE);
+        const x0 = x * pxPerCell;
+        const y0 = z * pxPerCell;
+        const x1 = x0 + pxPerCell;
+        const y1 = y0 + pxPerCell;
 
         if (hasWall(maze, x, z, WALL_N)) {
           ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
@@ -233,6 +241,23 @@ export class Minimap {
         }
       }
     }
+
+    this.mazeCache = off;
+    this.mazeCacheWorldSize = maze.side * CELL_SIZE;
+  }
+
+  private drawMazeFromCache(
+    ctx: CanvasRenderingContext2D,
+    toX: (wx: number) => number,
+    toY: (wz: number) => number,
+    scale: number,
+  ): void {
+    if (!this.mazeCache) return;
+    const half = this.mazeCacheWorldSize / 2;
+    const dx = toX(-half);
+    const dy = toY(-half);
+    const drawSize = this.mazeCacheWorldSize * scale;
+    ctx.drawImage(this.mazeCache, dx, dy, drawSize, drawSize);
   }
 
   private applyStyle(): void {

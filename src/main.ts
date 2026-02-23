@@ -118,7 +118,7 @@ function bootstrap(): void {
 
     engine.onUpdate((dt) => {
       if (!floorMgr || !player) return;
-      if (floorMgr.wallBoxes.length === 0 && !floorMgr.isInRoom) {
+      if (!floorMgr.hasWallCollision && !floorMgr.isInRoom) {
         player.update(dt, floorMgr.bounds);
       }
       floorMgr.update(dt);

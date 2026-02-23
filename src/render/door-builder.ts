@@ -16,6 +16,7 @@ import {
   WALL_THICKNESS,
 } from '@/shared/constants';
 import { roomHash } from '@/shared/hash';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export interface DoorInfo {
   cellX: number;
@@ -52,6 +53,7 @@ export function buildRoomWalls(
 ): RoomWallsResult {
   const group = new THREE.Group();
   const wallBoxes: THREE.Box3[] = [];
+  const wallGeos: THREE.BufferGeometry[] = [];
   const doors: DoorInfo[] = [];
   const halfGrid = (grid.side * CELL_SIZE) / 2;
   const hr = ROOM_SIZE / 2;
@@ -69,7 +71,7 @@ export function buildRoomWalls(
 
       const sides = [WALL_N, WALL_S, WALL_E, WALL_W];
       for (const side of sides) {
-        addRoomWall(group, wallBoxes, wallMat, cx, cz, hr, side, side === doorWall);
+        collectRoomWall(wallGeos, wallBoxes, cx, cz, hr, side, side === doorWall);
       }
 
       if (doorWall !== 0) {
@@ -87,6 +89,14 @@ export function buildRoomWalls(
           inward: doorInward(doorWall),
         });
       }
+    }
+  }
+
+  if (wallGeos.length > 0) {
+    const merged = mergeGeometries(wallGeos, false);
+    if (merged) {
+      group.add(new THREE.Mesh(merged, wallMat));
+      for (const g of wallGeos) g.dispose();
     }
   }
 
@@ -116,10 +126,9 @@ function pickDoorWall(
   return open[h % open.length]!;
 }
 
-function addRoomWall(
-  group: THREE.Group,
+function collectRoomWall(
+  geos: THREE.BufferGeometry[],
   wallBoxes: THREE.Box3[],
-  mat: THREE.Material,
   cx: number,
   cz: number,
   halfRoom: number,
@@ -132,28 +141,27 @@ function addRoomWall(
   if (side === WALL_N || side === WALL_S) {
     const wz = side === WALL_N ? cz - halfRoom : cz + halfRoom;
     if (!hasDoor) {
-      addBox(group, wallBoxes, mat, cx, h / 2, wz, roomLen, h, WALL_THICKNESS);
+      collectBox(geos, wallBoxes, cx, h / 2, wz, roomLen, h, WALL_THICKNESS);
     } else {
       const segLen = (roomLen - DOOR_WIDTH) / 2;
-      addBox(group, wallBoxes, mat, cx - halfRoom + segLen / 2, h / 2, wz, segLen, h, WALL_THICKNESS);
-      addBox(group, wallBoxes, mat, cx + halfRoom - segLen / 2, h / 2, wz, segLen, h, WALL_THICKNESS);
+      collectBox(geos, wallBoxes, cx - halfRoom + segLen / 2, h / 2, wz, segLen, h, WALL_THICKNESS);
+      collectBox(geos, wallBoxes, cx + halfRoom - segLen / 2, h / 2, wz, segLen, h, WALL_THICKNESS);
     }
   } else {
     const wx = side === WALL_W ? cx - halfRoom : cx + halfRoom;
     if (!hasDoor) {
-      addBox(group, wallBoxes, mat, wx, h / 2, cz, WALL_THICKNESS, h, roomLen);
+      collectBox(geos, wallBoxes, wx, h / 2, cz, WALL_THICKNESS, h, roomLen);
     } else {
       const segLen = (roomLen - DOOR_WIDTH) / 2;
-      addBox(group, wallBoxes, mat, wx, h / 2, cz - halfRoom + segLen / 2, WALL_THICKNESS, h, segLen);
-      addBox(group, wallBoxes, mat, wx, h / 2, cz + halfRoom - segLen / 2, WALL_THICKNESS, h, segLen);
+      collectBox(geos, wallBoxes, wx, h / 2, cz - halfRoom + segLen / 2, WALL_THICKNESS, h, segLen);
+      collectBox(geos, wallBoxes, wx, h / 2, cz + halfRoom - segLen / 2, WALL_THICKNESS, h, segLen);
     }
   }
 }
 
-function addBox(
-  group: THREE.Group,
+function collectBox(
+  geos: THREE.BufferGeometry[],
   wallBoxes: THREE.Box3[],
-  mat: THREE.Material,
   px: number,
   py: number,
   pz: number,
@@ -162,10 +170,12 @@ function addBox(
   sz: number,
 ): void {
   const geo = new THREE.BoxGeometry(sx, sy, sz);
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(px, py, pz);
-  group.add(mesh);
-  wallBoxes.push(new THREE.Box3().setFromObject(mesh));
+  geo.translate(px, py, pz);
+  geos.push(geo);
+  wallBoxes.push(new THREE.Box3(
+    new THREE.Vector3(px - sx / 2, py - sy / 2, pz - sz / 2),
+    new THREE.Vector3(px + sx / 2, py + sy / 2, pz + sz / 2),
+  ));
 }
 
 function doorWorldPos(
