@@ -13,6 +13,7 @@ Current ADRs:
 - [0004-room-generation-and-validation.md](0004-room-generation-and-validation.md)
 - [0005-storage-and-versioning.md](0005-storage-and-versioning.md)
 - [0006-performance-policy.md](0006-performance-policy.md)
+- [0007-maze-topology-and-chunking.md](0007-maze-topology-and-chunking.md)
 
 Cross links:
 

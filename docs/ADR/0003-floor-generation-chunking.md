@@ -1,6 +1,6 @@
 # ADR 0003: Floor Generation and Chunking
 
-- Status: Accepted
+- Status: Accepted (clarified by [ADR-0007](0007-maze-topology-and-chunking.md))
 - Date: 2026-02-22
 
 ## Context

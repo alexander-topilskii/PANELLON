@@ -2,6 +2,8 @@
 
 ## Milestone M0 — Core Boot
 
+plan.md: фаза 1 (этапы 1.1, 1.2)
+
 Scope:
 
 - project bootstrap;
@@ -16,10 +18,13 @@ DoD:
 
 ## Milestone M1 — Vertical Loop
 
+plan.md: фаза 2 (этапы 2.1, 2.2)
+
 Scope:
 
 - floors 0..5 templates;
-- floor transitions and resume.
+- stairs meshes and trigger zones;
+- floor transitions with fade and resume.
 
 DoD:
 
@@ -28,37 +33,47 @@ DoD:
 
 ## Milestone M2 — Procedural Corridors (6+)
 
+plan.md: фаза 3 (этапы 3.1, 3.2, 3.3)
+
 Scope:
 
-- chunked floor descriptors;
-- corridor mesh streaming;
-- stairs placement.
+- DFS-maze corridor generation on test grid;
+- floor formula and multi-floor support for floors 6+;
+- chunked corridor mesh streaming (eager topology + chunked meshes, ADR-0007).
 
 DoD:
 
-- no full-floor eager generation;
-- deterministic chunk recreation verified.
+- maze topology generated eagerly, meshes streamed by active radius;
+- deterministic chunk recreation verified;
+- floor 100 runs without frame drops.
 
 ## Milestone M3 — Room Pipeline v1
 
+plan.md: фаза 4 (этапы 4.1–4.7)
+
 Scope:
 
-- room identity and shader generation;
+- raymarching template with adaptive resolution;
 - corridor-room transition;
+- grammar AST: primitives, combiners, modifiers;
+- validation, retry, normalization;
 - valid/empty room status cache.
 
 DoD:
 
 - room mode works bidirectionally;
-- retry and fallback logic operational.
+- retry and fallback logic operational;
+- ≥90% rooms in active zone produce valid render.
 
 ## Milestone M4 — Content Quality
 
+plan.md: фаза 5 (этапы 5.1–5.4)
+
 Scope:
 
-- grammar tiers by floor bands;
-- color/noise/animation profiles;
-- preview textures in doors.
+- preview textures in doors;
+- grammar tiers by floor bands (21–50, 51–150, 151+);
+- color/noise/animation profiles.
 
 DoD:
 
@@ -67,11 +82,13 @@ DoD:
 
 ## Milestone M5 — Performance and Storage
 
+plan.md: фаза 6 (этапы 6.1–6.3)
+
 Scope:
 
-- adaptive resolution;
-- memory and cache budgets;
-- quota-safe storage policy.
+- IndexedDB cache with LRU;
+- corridor and room lighting;
+- adaptive resolution tuning.
 
 DoD:
 
@@ -80,8 +97,11 @@ DoD:
 
 ## Milestone M6 — Product Layer
 
+plan.md: фаза 7 (этапы 7.1, 7.2)
+
 Scope:
 
+- position save/restore via localStorage;
 - archive interactions;
 - settings UI;
 - release hardening.
