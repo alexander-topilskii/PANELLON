@@ -22,8 +22,8 @@ export class KeyboardState {
     let dx = 0;
     let dz = 0;
 
-    if (this.pressed.has('KeyW') || this.pressed.has('ArrowUp')) dz -= 1;
-    if (this.pressed.has('KeyS') || this.pressed.has('ArrowDown')) dz += 1;
+    if (this.pressed.has('KeyW') || this.pressed.has('ArrowUp')) dz += 1;
+    if (this.pressed.has('KeyS') || this.pressed.has('ArrowDown')) dz -= 1;
     if (this.pressed.has('KeyA') || this.pressed.has('ArrowLeft')) dx -= 1;
     if (this.pressed.has('KeyD') || this.pressed.has('ArrowRight')) dx += 1;
 
