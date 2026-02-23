@@ -116,13 +116,22 @@ export function describeFloor(floorNum: number, globalSeed = 0): FloorDescriptor
   const totalSize = side * CELL_SIZE;
   const halfSize = totalSize / 2;
 
-  // Stair position: deterministic from hash(floor), on grid edge
-  const stairHash = roomHash(0, globalSeed, floorNum, 0, 0);
   const edgeCells = side * 4 - 4;
-  const edgeIdx = stairHash % Math.max(edgeCells, 1);
-  const stairCell = edgeIndexToCell(edgeIdx, side);
-  const stairWorldX = stairCell.x * CELL_SIZE - halfSize + CELL_SIZE / 2;
-  const stairWorldZ = stairCell.z * CELL_SIZE - halfSize + CELL_SIZE / 2;
+
+  // Up-stair cell
+  const upHash = roomHash(0, globalSeed, floorNum, 0, 0);
+  const upIdx = upHash % Math.max(edgeCells, 1);
+  const upCell = edgeIndexToCell(upIdx, side);
+  const upX = upCell.x * CELL_SIZE - halfSize + CELL_SIZE / 2;
+  const upZ = upCell.z * CELL_SIZE - halfSize + CELL_SIZE / 2;
+
+  // Down-stair cell — different from up
+  const downHash = roomHash(0, globalSeed, floorNum, 1, 1);
+  let downIdx = downHash % Math.max(edgeCells, 1);
+  if (downIdx === upIdx && edgeCells > 1) downIdx = (downIdx + 1) % edgeCells;
+  const downCell = edgeIndexToCell(downIdx, side);
+  const downX = downCell.x * CELL_SIZE - halfSize + CELL_SIZE / 2;
+  const downZ = downCell.z * CELL_SIZE - halfSize + CELL_SIZE / 2;
 
   return {
     number: floorNum,
@@ -132,12 +141,12 @@ export function describeFloor(floorNum: number, globalSeed = 0): FloorDescriptor
     height: CEILING_HEIGHT,
     gridSide: side,
     stairs: [
-      { position: { x: stairWorldX, z: stairWorldZ }, direction: 'up' },
-      { position: { x: stairWorldX, z: stairWorldZ }, direction: 'down' },
+      { position: { x: upX, z: upZ }, direction: 'up' },
+      { position: { x: downX, z: downZ }, direction: 'down' },
     ],
     teleports: [],
-    spawn: { x: stairWorldX, z: stairWorldZ },
-    reservedCells: [stairCell],
+    spawn: { x: downX, z: downZ },
+    reservedCells: [upCell, downCell],
   };
 }
 
